@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { jsPDF } from 'jspdf';
 import { db } from "./firebase";
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import { Routes, Route, useParams } from "react-router-dom";
+
 /**
  * LUISINA BAGNAROLI - SISTEMA DE GESTIÓN DE EVENTOS 2026
  * ---------------------------------------------------------
@@ -104,14 +106,19 @@ background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://i.ib
     }
 
     .project-card {
-      background: var(--lb-white); border-radius: 30px; overflow: hidden;
+      background: var(--lb-white); border-radius: 30px; overflow: visible;
       box-shadow: var(--shadow-sm); transition: var(--transition);
       border: 1px solid rgba(0,0,0,0.02);
       position: relative;
     }
     .project-card:hover { transform: translateY(-10px); box-shadow: var(--shadow-md); }
     .card-image { width: 100%; height: 240px; object-fit: cover; }
-    .card-content { padding: 30px; }
+   .card-content { 
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
     .card-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-bottom: 8px; }
     
     /* BOTONES */
@@ -190,57 +197,103 @@ background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://i.ib
 
 injectStyles();
 
-const App = () => {
+const AppContent = () => {
+  const { id } = useParams();
+  const esCliente = !!id;
   // ---------------------------------------------------------
   // ESTADO Y PERSISTENCIA
   // ---------------------------------------------------------
   const [eventos, setEventos] = useState([]);
+  const eventoCliente = eventos.find(e => String(e.id) === id);
   const [eventoActivoId, setEventoActivoId] = useState(null);
   const [terminoBusqueda, setTerminoBusqueda] = useState("");
   const [nuevoNombre, setNuevoNombre] = useState("");
 const [nuevaFecha, setNuevaFecha] = useState("");
 
   useEffect(() => {
-  const cargarEventos = async () => {
-    try {
-      const querySnapshot = await getDocs(collection(db, "eventos"));
-      const eventosFirebase = [];
 
-      querySnapshot.forEach((doc) => {
-        eventosFirebase.push(doc.data());
-      });
+  const unsub = onSnapshot(collection(db, "eventos"), (snapshot) => {
+    
+    const lista = [];
 
-      setEventos(eventosFirebase);
+    snapshot.forEach(doc => {
+      const data = doc.data();
 
-      console.log("📥 Eventos cargados desde Firebase");
+      if (esCliente && id) {
+        if (String(data.id) === id) {
+          lista.push(data);
+        }
+      } else {
+        lista.push(data);
+      }
+    });
 
-    } catch (error) {
-      console.error("❌ Error cargando Firebase:", error);
-    }
-  };
+    setEventos(lista);
 
-  cargarEventos();
-}, []);
+    console.log("🔄 Sync en tiempo real");
+  });
 
+  return () => unsub();
+
+}, [id]);
   // Guardado automático
   useEffect(() => {
     localStorage.setItem('LB_STUDIO_STORAGE_V3', JSON.stringify(eventos));
   }, [eventos]);
 
   // Evento activo memorizado
-  const eventoActual = useMemo(() => 
-    eventos.find(e => e.id === eventoActivoId), 
-    [eventos, eventoActivoId]
-  );
+  const eventoActual = useMemo(() => {
 
+  if (esCliente && id) {
+    return eventos.find(e => String(e.id) === id);
+  }
+
+  return eventos.find(e => e.id === eventoActivoId);
+
+}, [eventos, eventoActivoId, id]);
+const guardarEvento = async (evento) => {
+  try {
+    const ref = doc(db, "eventos", evento.id.toString());
+    await updateDoc(ref, evento);
+    console.log("💾 Evento guardado en Firebase");
+  } catch (error) {
+    console.error("❌ Error guardando evento:", error);
+  }
+};
 // ---------------------------------------------------------
   // ACCIONES DE PROYECTO
   // ---------------------------------------------------------
-  const handleActualizarEvento = useCallback((nuevosDatos) => {
-    setEventos(prev => prev.map(e => 
-      e.id === eventoActivoId ? { ...e, ...nuevosDatos } : e
-    ));
-  }, [eventoActivoId]);
+ const handleActualizarEvento = useCallback((nuevosDatos) => {
+
+  setEventos(prev => {
+    
+    const actualizado = prev.map(e => {
+
+      // 🔥 CLAVE: detectar si es cliente o admin
+      const esElEvento = esCliente
+        ? String(e.id) === id
+        : e.id === eventoActivoId;
+
+      return esElEvento ? { ...e, ...nuevosDatos } : e;
+    });
+
+    // 🔥 obtener el evento correcto
+    const eventoActualizado = actualizado.find(e =>
+      esCliente
+        ? String(e.id) === id
+        : e.id === eventoActivoId
+    );
+
+    if (eventoActualizado) {
+      guardarEvento(eventoActualizado);
+    }
+
+    return actualizado;
+  });
+
+}, [eventoActivoId, id, esCliente]);
+
+  
 
 const handleCrearProyecto = async () => {  if (!nuevoNombre) {
   alert("Poné un nombre al evento");
@@ -264,7 +317,11 @@ const nuevo = {
 
 try {
   // 🔥 primero guarda en Firebase
-  await addDoc(collection(db, "eventos"), nuevo);
+  const docRef = await addDoc(collection(db, "eventos"), nuevo);
+
+await updateDoc(docRef, { id: docRef.id });
+
+nuevo.id = docRef.id;
 
   console.log("✅ Guardado en Firebase");
 
@@ -490,10 +547,11 @@ const calcularDias = (fecha) => {
     doc.save(`PLANIFICACION_${e.nombre.replace(/\s+/g, '_')}.pdf`);
   };
 
+
   // ---------------------------------------------------------
   // RENDER: PANTALLA DE INICIO (DASHBOARD)
   // ---------------------------------------------------------
-  if (!eventoActivoId || !eventoActual) {
+  if (!esCliente && (!eventoActivoId || !eventoActual)) {
     return (
       <div className="app-container">
         <aside className="sidebar-brand">
@@ -545,37 +603,56 @@ const calcularDias = (fecha) => {
     return new Date(a.fecha) - new Date(b.fecha);
   })
   .map(e => (
-                <div key={e.id} className="project-card" onClick={() => setEventoActivoId(e.id)} style={{cursor: 'pointer'}}>
+                <div 
+  className="project-card"
+  style={{
+    display: 'flex',
+    flexDirection: 'column'
+  }}
+>
                   <img src={e.img} className="card-image" alt="Wedding" />
                   <div className="card-content">
                     <h3 className="card-title">{e.nombre}</h3>
-                    <p style={{color: 'var(--lb-gray-mid)', marginBottom: '10px'}}>
-  📅 {e.fecha || "Sin fecha"}
-</p>
-<p style={{
-  color: (() => {
-    const texto = calcularDias(e.fecha);
-    if (texto === "HOY") return 'red';
-    if (texto.includes("Faltan")) {
-      const dias = parseInt(texto.match(/\d+/));
-      if (dias <= 3) return 'red';
-      if (dias <= 10) return 'orange';
-      return 'var(--lb-gold)';
-    }
-    return '#999';
-  })(),
-  fontSize: '0.8rem',
-  marginBottom: '10px'
+                    
+
+
+                    <div style={{
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '10px',
+  marginTop: '15px'
 }}>
-  {calcularDias(e.fecha)}
-</p>
-<p style={{color: 'var(--lb-gray-mid)', marginBottom: '20px'}}>
-  {e.invitados.length} invitados • {e.mesas.length} mesas organizadas
-</p>
-                    <div style={{display: 'flex', gap: '10px'}}>
-                      <button className="btn-luxury btn-outline" style={{flex: 1}}>Configurar</button>
-                      <button className="delete-btn" onClick={(event) => handleEliminarProyecto(e.id, event)}>🗑️</button>
-                    </div>
+
+
+  <button 
+    className="btn-luxury btn-outline"
+    style={{width: '100%'}}
+    onClick={() => setEventoActivoId(e.id)}
+  >
+    Configurar
+  </button>
+
+ <button
+  className="btn-luxury"
+  style={{width: '100%'}}
+  onClick={() => {
+    const link = window.location.origin + "/evento/" + e.id;
+    navigator.clipboard.writeText(link);
+    alert("🔗 Link copiado:\n\n" + link);
+  }}
+>
+  Compartir evento
+</button>
+
+  <button
+    className="delete-btn"
+    onClick={(event) => handleEliminarProyecto(e.id, event)}
+  >
+    🗑️ Eliminar
+  </button>
+  
+
+</div>
                   </div>
                 </div>
               ))}
@@ -590,19 +667,43 @@ const calcularDias = (fecha) => {
       </div>
     );
   }
-
+if (!eventoActual) {
+  <div style={{background:'red', color:'white', padding:'20px'}}>
+  TEST GLOBAL
+</div>
+  return (
+    <div style={{padding: "40px", fontSize: "18px"}}>
+      Cargando evento...
+    </div>
+  );
+}
   // ---------------------------------------------------------
   // RENDER: EDITOR DE EVENTO (WORKSPACE)
   // ---------------------------------------------------------
   return (
-    <div className="app-container" style={{background: '#f9f7f4'}}>
-      <aside className="editor-sidebar">
-        <button 
-          onClick={() => setEventoActivoId(null)} 
-          style={{background:'none', border:'none', color:'var(--lb-gray-mid)', cursor:'pointer', marginBottom: '20px', textAlign:'left', fontWeight:700}}
-        >
-          ← VOLVER AL PANEL
-        </button>
+  <div className="app-container" style={{background: '#f9f7f4'}}>
+
+    <div style={{background:'red', color:'white', padding:'20px'}}>
+      TEST REAL APP
+    </div>
+
+    <aside className="editor-sidebar">
+        {!esCliente && (
+  <button 
+    onClick={() => setEventoActivoId(null)} 
+    style={{
+      background:'none',
+      border:'none',
+      color:'var(--lb-gray-mid)',
+      cursor:'pointer',
+      marginBottom: '20px',
+      textAlign:'left',
+      fontWeight:700
+    }}
+  >
+    ← VOLVER AL PANEL
+  </button>
+)}
 
         <h2 className="brand-title" style={{fontSize: '1.8rem', marginBottom: '30px'}}>{eventoActual.nombre}</h2>
         <input
@@ -648,13 +749,15 @@ const calcularDias = (fecha) => {
           }
         </div>
 
-        <button 
-          className="btn-luxury" 
-          style={{marginTop: '20px', background: 'var(--lb-dark)'}} 
-          onClick={exportarDocumentacionMaestra}
-        >
-          Generar Reporte PDF 
-        </button>
+        {!esCliente && (
+  <button 
+    className="btn-luxury"
+    style={{marginTop: '20px', background: 'var(--lb-dark)'}}
+    onClick={exportarDocumentacionMaestra}
+  >
+    Generar Reporte PDF
+  </button>
+)}
       </aside>
 
       <main className="editor-canvas">
@@ -709,4 +812,13 @@ const calcularDias = (fecha) => {
     </div>
   );
   };
-  export default App;
+  const App = () => {
+  return (
+    <Routes>
+      <Route path="/" element={<AppContent />} />
+      <Route path="/evento/:id" element={<AppContent />} />
+    </Routes>
+  );
+};
+
+export default App;
