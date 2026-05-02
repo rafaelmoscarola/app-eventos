@@ -52,7 +52,17 @@ const injectStyles = () => {
     ::-webkit-scrollbar-thumb:hover { background: var(--lb-gray-mid); }
 
     /* LAYOUT ESTRUCTURAL */
-    .app-container { display: flex; min-height: 100vh; }
+    .app-container {
+  display: flex;
+  flex-direction: row;
+}
+
+/* 📱 MODO CELULAR */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+}
 
     .sidebar-brand {
       width: 320px; height: 100vh; 
@@ -63,6 +73,19 @@ const injectStyles = () => {
       z-index: 100;
       display: flex; flex-direction: column;
     }
+      @media (max-width: 768px) {
+  .sidebar-brand {
+    position: relative;
+    width: 100%;
+    height: auto;
+    padding: 20px;
+  }
+
+  .main-wrapper {
+    margin-left: 0;
+    width: 100%;
+  }
+}
 
     .logo-box {
       width: 60px; height: 60px; 
@@ -136,12 +159,38 @@ background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://i.ib
     .btn-outline:hover { background: var(--lb-gold); color: white; }
 
     /* WORKSPACE EDITOR */
-    .editor-layout { display: flex; height: 100vh; }
+    .editor-layout {
+  display: flex;
+  height: 100vh;
+}
+
+/* 📱 RESPONSIVE CELULAR */
+@media (max-width: 768px) {
+  .editor-layout {
+    flex-direction: column;
+    height: auto;
+  }
+}
     .editor-sidebar {
       width: 420px; background: var(--lb-white); border-right: 1px solid var(--lb-gray-light);
       display: flex; flex-direction: column; padding: 40px;
     }
+
+      /* 📱 RESPONSIVE CELULAR */
+@media (max-width: 768px) {
+  .editor-sidebar {
+    width: 100%;
+    padding: 20px;
+    border-right: none;
+    border-bottom: 1px solid var(--lb-gray-light);
+  }
+}
     .editor-canvas { flex: 1; padding: 60px; overflow-y: auto; background: #f9f7f4; }
+    @media (max-width: 768px) {
+  .editor-canvas {
+    padding: 20px;
+  }
+}
 
     .input-field {
       width: 100%; padding: 16px; border-radius: 12px; border: 1px solid var(--lb-gray-light);
@@ -668,9 +717,6 @@ const calcularDias = (fecha) => {
     );
   }
 if (!eventoActual) {
-  <div style={{background:'red', color:'white', padding:'20px'}}>
-  TEST GLOBAL
-</div>
   return (
     <div style={{padding: "40px", fontSize: "18px"}}>
       Cargando evento...
@@ -680,12 +726,9 @@ if (!eventoActual) {
   // ---------------------------------------------------------
   // RENDER: EDITOR DE EVENTO (WORKSPACE)
   // ---------------------------------------------------------
-  return (
+ return (
   <div className="app-container" style={{background: '#f9f7f4'}}>
-
-    <div style={{background:'red', color:'white', padding:'20px'}}>
-      TEST REAL APP
-    </div>
+    <div className="editor-layout">
 
     <aside className="editor-sidebar">
         {!esCliente && (
@@ -808,10 +851,11 @@ if (!eventoActual) {
             </div>
           ))}
         </div>
-      </main>
-    </div>
-  );
-  };
+        </main>
+    </div> {/* editor-layout */}
+  </div>
+);
+};    
   const App = () => {
   return (
     <Routes>
