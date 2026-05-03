@@ -448,6 +448,13 @@ const AppContent = () => {
     .replace(/[\u0300-\u036f]/g, "")
     .trim();
 };
+const [pantallaPublica, setPantallaPublica] = useState(true);
+const [fadeOut, setFadeOut] = useState(false);
+const [logueado, setLogueado] = useState(false);
+
+const [pinInput, setPinInput] = useState("");
+const PIN_CORRECTO = "1417"; // después lo cambiamos
+
   const { id } = useParams();
   const params = new URLSearchParams(window.location.search);
 const esVistaLista = params.get("vista") === "lista";
@@ -850,12 +857,226 @@ handleActualizarEvento({
 
     doc.save(`PLANIFICACION_${e.nombre.replace(/\s+/g, '_')}.pdf`);
   };
+ 
 
 
   // ---------------------------------------------------------
   // RENDER: PANTALLA DE INICIO (DASHBOARD)
   // ---------------------------------------------------------
   if (!esCliente && (!eventoActivoId || !eventoActual)) {
+    
+    if (pantallaPublica) {return (
+  <div style={{
+    opacity: fadeOut ? 0 : 1,
+transition: "opacity 2s ease",
+    minHeight: "100vh",
+    position: "relative",
+    backgroundImage: "url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1600')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    textAlign: "center",
+    color: "#fff"
+    
+  }}>
+    <div className="particles">
+  <span></span>
+  <span></span>
+  <span></span>
+  <span></span>
+  <span></span>
+  <span></span>
+  <span></span>
+  <span></span>
+  <span></span>
+  <span></span>
+  <span></span>
+  <span></span><span></span>
+  <span></span>
+  <span></span>
+  <span></span>
+  <span></span>
+  <span></span>
+</div>
+
+    {/* CAPA OSCURA PARA CONTRASTE */}
+    <div style={{
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      background: "rgba(0,0,0,0.4)"
+    }} />
+
+    {/* CONTENIDO */}
+    <div style={{
+      position: "relative",
+      zIndex: 2
+    }}>
+
+      {/* NOMBRE */}
+      <h1 style={{
+        fontFamily: "Brittany Signature",
+        fontSize: "3.5rem",
+        marginBottom: "10px"
+      }}>
+        Luisina Bagnaroli
+      </h1>
+
+      {/* FRASE */}
+      <p style={{
+        marginBottom: "30px",
+        fontSize: "1rem"
+      }}>
+        El mejor momento para celebrar, es <strong>siempre</strong>
+      </p>
+
+      {/* BOTÓN */}
+      <button
+        onClick={() => {
+  setFadeOut(true);
+
+  setTimeout(() => {
+    setPantallaPublica(false);
+  }, 2000);
+}}
+        style={{
+          padding: "14px 30px",
+          borderRadius: "30px",
+          background: "linear-gradient(145deg, #c9a86a, #b3935c)",
+          border: "none",
+          color: "#fff",
+          fontWeight: "600",
+          letterSpacing: "1px",
+          cursor: "pointer",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.4)"
+        }}
+      >
+        ✨ CONTINUAR
+      </button>
+      
+
+    </div>
+    <div style={{
+  position: "absolute",
+bottom: "0",
+left: "0",
+width: "100%",
+display: "flex",
+justifyContent: "center",
+gap: "15px",
+padding: "0 0 25px 0",
+zIndex: 5,
+}}>
+
+  {/* INSTAGRAM */}
+  <a
+    href="https://www.instagram.com/armalocomoquieras/"
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{
+      padding: "10px 18px",
+      borderRadius: "20px",
+      background: "rgba(255, 255, 255, 0.12)",
+border: "1px solid rgba(255, 255, 255, 0.35)",
+color: "#ffffff",
+backdropFilter: "blur(6px)",
+      fontSize: "0.8rem",
+      letterSpacing: "1px",
+      textDecoration: "none",
+      transition: "0.3s"
+    }}
+  >
+     Instagram
+  </a>
+
+  {/* WHATSAPP */}
+  <a
+    href="https://wa.me/543404597725"
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{
+      padding: "10px 18px",
+      borderRadius: "20px",
+      background: "rgba(255, 255, 255, 0.12)",
+border: "1px solid rgba(255, 255, 255, 0.35)",
+color: "#ffffff",
+backdropFilter: "blur(6px)",
+      fontSize: "0.8rem",
+      letterSpacing: "1px",
+      textDecoration: "none",
+      transition: "0.3s"
+    }}
+  >
+     WhatsApp
+  </a>
+
+</div>
+  </div>
+  
+);
+}
+ if (!logueado) {
+  return (
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      background: "#f4f1ea"
+    }}>
+
+      <div style={{
+        textAlign: "center"
+      }}>
+
+        <h2>INGRESE PIN</h2>
+
+        <input
+          type="password"
+          maxLength={4}
+          value={pinInput}
+          onChange={(e) => setPinInput(e.target.value)}
+          style={{
+            fontSize: "2rem",
+            textAlign: "center",
+            letterSpacing: "10px"
+          }}
+        />
+
+        <br /><br />
+
+        <button
+  onClick={() => {
+    if (pinInput === PIN_CORRECTO) {
+      setLogueado(true);
+    } else {
+      alert("PIN incorrecto");
+    }
+  }}
+  style={{
+    padding: "14px 30px",
+    borderRadius: "30px",
+    background: "linear-gradient(145deg, #c9a86a, #b3935c)",
+    border: "none",
+    color: "#fff",
+    fontWeight: "600",
+    letterSpacing: "1px",
+    cursor: "pointer",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.4)",
+    transition: "0.3s"
+  }}
+>
+  ✨ INGRESAR
+</button>
+
+      </div>
+    </div>
+  );
+}
     return (
       <div className="app-container">
         <aside className="sidebar-brand">
@@ -1018,10 +1239,8 @@ handleActualizarEvento({
         </h1>
 
         <p className="splash-sub">
-          <p className="splash-sub">
   El mejor momento para celebrar, es <strong>siempre</strong>
 </p>
-        </p>
 
         <button 
           className="btn-luxury splash-btn"
@@ -1064,20 +1283,9 @@ if (esVistaLista && eventoActual) {
       borderRadius: "22px",
       background: "linear-gradient(145deg, #c9a86a, #b3935c)",
       boxShadow: "0 30px 80px rgba(0,0,0,0.18)",
-      textAlign: "center",
-      position: "relative",
-overflow: "hidden",
+      textAlign: "center"
     }}>
-<div style={{
-  position: "absolute",
-  top: 0,
-  left: "-100%",
-  width: "200%",
-  height: "100%",
-  background: "linear-gradient(120deg, transparent, rgba(255,255,255,0.25), transparent)",
-  animation: "shine 6s infinite",
-  zIndex: 1
-}} />
+
       {/* NOMBRE EVENTO */}
       <h2 style={{
         fontFamily: "Brittany Signature",
@@ -1236,6 +1444,7 @@ overflow: "hidden",
   value={eventoActual.fecha || ""}
   onChange={(e) => handleActualizarEvento({ fecha: e.target.value })}
   style={{marginBottom: '20px'}}
+  disabled={esCliente}
 />
 {!eventoActual.cerrado && (
   <button
