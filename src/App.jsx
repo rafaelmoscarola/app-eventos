@@ -441,7 +441,16 @@ const injectStyles = () => {
 injectStyles();
 
 const AppContent = () => {
+ const normalizarTexto = (texto) => {
+  return texto
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+};
   const { id } = useParams();
+  const params = new URLSearchParams(window.location.search);
+const esVistaLista = params.get("vista") === "lista";
   const esCliente = !!id;
   const [pantallaInicio, setPantallaInicio] = useState(esCliente);
   // ---------------------------------------------------------
@@ -453,6 +462,12 @@ const AppContent = () => {
   const [terminoBusqueda, setTerminoBusqueda] = useState("");
   const [nuevoNombre, setNuevoNombre] = useState("");
 const [nuevaFecha, setNuevaFecha] = useState("");
+const [invitadosTemp, setInvitadosTemp] = useState([]);
+const [mesaActivaId, setMesaActivaId] = useState(null);
+const [busquedaInvitado, setBusquedaInvitado] = useState("");
+const [resultadoMesa, setResultadoMesa] = useState(null);
+
+
 
   useEffect(() => {
 
@@ -502,8 +517,19 @@ const guardarEvento = async (evento) => {
 // ---------------------------------------------------------
   // ACCIONES DE PROYECTO
   // ---------------------------------------------------------
- const handleActualizarEvento = useCallback((nuevosDatos) => {
+  const reordenarMesas = (mesas) => {
+  let contador = 1;
 
+  return mesas.map(m => {
+    if (m.esVIP) return m;
+
+    return {
+      ...m,
+      numero: contador++
+    };
+  });
+};
+ const handleActualizarEvento = useCallback((nuevosDatos) => {
   setEventos(prev => {
     
     const actualizado = prev.map(e => {
@@ -515,6 +541,7 @@ const guardarEvento = async (evento) => {
 
       return esElEvento ? { ...e, ...nuevosDatos } : e;
     });
+    
 
     // 🔥 obtener el evento correcto
     const eventoActualizado = actualizado.find(e =>
@@ -553,8 +580,6 @@ const nuevo = {
   img: `https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=800&sig=${nuevoId}&q=${fotoAzar}`,
   invitados: [],
   mesas: [],
-  contadorMesas: 1
-  
 };
 
 try {
@@ -654,19 +679,35 @@ const calcularDias = (fecha) => {
   // GESTIÓN DE MESAS
   // ---------------------------------------------------------
   const handleAgregarMesa = (vip = false) => {
+    if (vip) {
+  const yaExisteVIP = eventoActual.mesas.some(m => m.esVIP);
+  if (yaExisteVIP) {
+    alert("Ya existe una mesa principal");
+    return;
+  }
+}
     if (estaBloqueado) return;
 
-    const nuevaMesa = {
-      id: Date.now(),
-      numero: vip ? "MESA PRINCIPAL" : eventoActual.contadorMesas,
-      esVIP: vip,
-      invitadosIds: []
-    };
+    const numeroMesa = eventoActual.mesas.filter(m => !m.esVIP).length + 1;
 
-    handleActualizarEvento({
-      mesas: [...eventoActual.mesas, nuevaMesa],
-      contadorMesas: vip ? eventoActual.contadorMesas : eventoActual.contadorMesas + 1
-    });
+const nuevaMesa = {
+  id: Date.now(),
+  numero: vip ? "MESA PRINCIPAL" : numeroMesa,
+  esVIP: vip,
+  invitadosIds: []
+};
+
+    let nuevasMesas;
+
+if (vip) {
+  nuevasMesas = [nuevaMesa, ...eventoActual.mesas];
+} else {
+  nuevasMesas = [...eventoActual.mesas, nuevaMesa];
+}
+
+handleActualizarEvento({
+  mesas: reordenarMesas(nuevasMesas)
+});
   };
 
   const handleEliminarMesa = (mId) => {
@@ -677,10 +718,12 @@ const calcularDias = (fecha) => {
       i.mesaId === mId ? { ...i, mesaId: null } : i
     );
 
-    handleActualizarEvento({
-      mesas: eventoActual.mesas.filter(m => m.id !== mId),
-      invitados: invitadosDesasignados
-    });
+    const nuevasMesas = eventoActual.mesas.filter(m => m.id !== mId);
+
+handleActualizarEvento({
+  mesas: reordenarMesas(nuevasMesas),
+  invitados: invitadosDesasignados
+});
   };
 
   const handleAsignarMesa = (invId, mesaId) => {
@@ -874,6 +917,21 @@ const calcularDias = (fecha) => {
                   <img src={e.img} className="card-image" alt="Wedding" />
                   <div className="card-content">
                     <h3 className="card-title">{e.nombre}</h3>
+                    {e.cerrado && (
+  <div style={{
+    marginTop: "10px",
+    padding: "6px 12px",
+    background: "rgba(197,160,89,0.1)",
+    border: "1px solid rgba(197,160,89,0.3)",
+    borderRadius: "20px",
+    fontSize: "0.7rem",
+    fontWeight: 700,
+    color: "var(--lb-gold)",
+    display: "inline-block"
+  }}>
+    🔒 EVENTO CERRADO
+  </div>
+)}
                     
 
 
@@ -897,7 +955,7 @@ const calcularDias = (fecha) => {
   className="btn-luxury"
   style={{width: '100%'}}
   onClick={() => {
-    const link = window.location.origin + "/evento/" + e.id;
+    const link = window.location.origin + "/evento/" + e.id 
     navigator.clipboard.writeText(link);
     alert("🔗 Link copiado:\n\n" + link);
   }}
@@ -928,13 +986,14 @@ const calcularDias = (fecha) => {
       </div>
     );
   }
-if (!eventoActual) {
+  if (!eventoActual) {
   return (
     <div style={{padding: "40px", fontSize: "18px"}}>
       Cargando evento...
     </div>
   );
 }
+
   // ---------------------------------------------------------
   // RENDER: EDITOR DE EVENTO (WORKSPACE)
   // ---------------------------------------------------------
@@ -986,6 +1045,167 @@ if (!eventoActual) {
 
     </div>
   );
+}
+if (esVistaLista && eventoActual) {
+  return (
+  <div style={{
+    minHeight: "100vh",
+    background: "linear-gradient(135deg, #f4f1ea, #eae3d6)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: "20px"
+  }}>
+
+    <div style={{
+      width: "100%",
+      maxWidth: "420px",
+      padding: "40px 30px",
+      borderRadius: "22px",
+      background: "linear-gradient(145deg, #c9a86a, #b3935c)",
+      boxShadow: "0 30px 80px rgba(0,0,0,0.18)",
+      textAlign: "center",
+      position: "relative",
+overflow: "hidden",
+    }}>
+<div style={{
+  position: "absolute",
+  top: 0,
+  left: "-100%",
+  width: "200%",
+  height: "100%",
+  background: "linear-gradient(120deg, transparent, rgba(255,255,255,0.25), transparent)",
+  animation: "shine 6s infinite",
+  zIndex: 1
+}} />
+      {/* NOMBRE EVENTO */}
+      <h2 style={{
+        fontFamily: "Brittany Signature",
+        fontSize: "2.6rem",
+        marginBottom: "10px"
+      }}>
+        {eventoActual.nombre}
+      </h2>
+
+      {/* SUBTITULO */}
+      <div style={{
+        fontSize: "0.85rem",
+        letterSpacing: "2px",
+        textTransform: "uppercase",
+        opacity: 0.7,
+        marginBottom: "25px"
+      }}>
+        Buscar mi mesa
+      </div>
+
+      {/* INPUT */}
+      <input
+        type="text"
+        placeholder="Escribí tu nombre..."
+        value={busquedaInvitado}
+        onChange={(e) => setBusquedaInvitado(e.target.value)}
+        style={{
+          width: "100%",
+          padding: "14px",
+          borderRadius: "14px",
+          border: "none",
+          marginBottom: "15px",
+          fontSize: "1rem",
+          textAlign: "center",
+          background: "#f9f7f4",
+          boxShadow: "inset 0 2px 6px rgba(0,0,0,0.1)"
+        }}
+      />
+
+      {/* BOTÓN */}
+      <button
+        onClick={() => {
+
+  const busqueda = normalizarTexto(busquedaInvitado)
+    .split(" ")
+    .filter(p => p.length > 0);
+
+  const invitado = eventoActual.invitados.find(inv => {
+    const nombreInvitado = normalizarTexto(inv.nombre)
+      .split(" ")
+      .filter(p => p.length > 0);
+
+    return busqueda.every(palabraBuscada =>
+      nombreInvitado.some(palabraInv =>
+        palabraInv.includes(palabraBuscada)
+      )
+    );
+  });
+
+  if (!invitado) {
+    setResultadoMesa("no");
+    return;
+  }
+
+  if (!invitado.mesaId) {
+    setResultadoMesa("sin");
+    return;
+  }
+
+  const mesa = eventoActual.mesas.find(m => m.id === invitado.mesaId);
+
+  if (!mesa) {
+    setResultadoMesa("sin");
+    return;
+  }
+
+  setResultadoMesa(mesa.numero);
+}}
+        style={{
+          width: "100%",
+          padding: "14px",
+          borderRadius: "14px",
+          background: "#1a1a1a",
+          color: "#fff",
+          border: "none",
+          fontSize: "0.95rem",
+          cursor: "pointer"
+        }}
+      >
+        Buscar
+      </button>
+
+      {/* RESULTADO */}
+      {resultadoMesa && (
+        <div style={{
+          marginTop: "25px",
+          fontSize: "1.2rem",
+          fontWeight: "600"
+        }}>
+          {resultadoMesa === "no"
+            ? "No encontramos tu nombre"
+            : resultadoMesa === "sin"
+            ? "Todavía no tenés mesa asignada"
+            : `Tu mesa es: ${resultadoMesa}`}
+        </div>
+      )}
+
+      {/* FIRMA */}
+      <div style={{
+        marginTop: "40px",
+        fontSize: "0.75rem",
+        opacity: 0.8
+      }}>
+        <div style={{
+          fontFamily: "Brittany Signature",
+          fontSize: "1.5rem"
+        }}>
+          Luisina Bagnaroli
+        </div>
+
+        <div>
+          El mejor momento para celebrar, es <strong>SIEMPRE</strong>
+        </div>
+      </div>
+
+    </div>
+  </div>
+);
 }
   return (
   <div className="app-container" style={{background: '#f9f7f4'}}>
@@ -1142,6 +1362,22 @@ if (!eventoActual) {
 }}>
           <div>
             <h3 style={{fontFamily: 'Playfair Display', fontSize: '2.2rem' , textAlign: window.innerWidth < 768 ? 'center' : 'left'}}>Plano de Mesas</h3>
+            {esCliente && (
+  <button
+    className="btn-luxury"
+    style={{
+      marginTop: "15px",
+      background: "var(--lb-gold-dark)"
+    }}
+    onClick={() => {
+      const link = window.location.origin + "/evento/" + eventoActual.id + "?vista=lista";
+      navigator.clipboard.writeText(link);
+      alert("🔗 Link de lista copiado:\n\n" + link);
+    }}
+  >
+    📋 Compartir lista
+  </button>
+)}
             <p style={{color: 'var(--lb-gray-mid)'}}>Asigna tus invitados a las mesas del salón</p>
           </div>
           <div style={{
@@ -1172,20 +1408,115 @@ if (!eventoActual) {
                   >×</button>
               </div>
 
-              <select 
-                className="input-field" 
-                disabled={estaBloqueado}
-                style={{fontSize: '0.8rem', padding: '10px'}}
-                onChange={(e) => handleAsignarMesa(Number(e.target.value), mesa.id)}
-                value=""
-              >
-                <option value="">Ubicar invitado...</option>
-                {eventoActual.invitados
-  .filter(i => !i.mesaId)
-  .sort((a, b) => a.nombre.localeCompare(b.nombre))
-  .map(i => <option key={i.id} value={i.id}>{i.nombre}</option>)
-}
-              </select>
+              <div style={{ position: "relative" }}>
+
+  <button
+    onClick={() => {
+      const nombre = busquedaInvitado.toLowerCase().trim();
+
+const invitado = eventoActual.invitados.find(inv =>
+  inv.nombre.toLowerCase().includes(nombre)
+);
+      setMesaActivaId(mesa.id);
+      setInvitadosTemp(mesa.invitadosIds || []);
+    }}
+    style={{
+      width: "100%",
+      padding: "10px",
+      borderRadius: "8px",
+      border: "1px solid #ccc",
+      background: "#fff",
+      cursor: "pointer"
+    }}
+  >
+    Ubicar invitados...
+  </button>
+
+  {mesaActivaId === mesa.id && (
+    <div style={{
+      position: "absolute",
+      top: "45px",
+      left: 0,
+      width: "100%",
+      background: "#fff",
+      border: "1px solid #ddd",
+      borderRadius: "10px",
+      padding: "10px",
+      maxHeight: "200px",
+      overflowY: "auto",
+      zIndex: 10
+    }}>
+
+      {(eventoActual.invitados || [])
+        .filter(inv => {
+          const yaAsignado = eventoActual.mesas.some(m =>
+            m.id !== mesa.id && m.invitadosIds.includes(inv.id)
+          );
+          return !yaAsignado;
+        })
+        .map(inv => (
+          <label key={inv.id} style={{ display: "block" }}>
+            <input
+              type="checkbox"
+              checked={invitadosTemp.includes(inv.id)}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setInvitadosTemp(prev => [...prev, inv.id]);
+                } else {
+                  setInvitadosTemp(prev => prev.filter(id => id !== inv.id));
+                }
+              }}
+            />
+            {" "}{inv.nombre}
+          </label>
+        ))}
+
+      <button
+        onClick={() => {
+         // 🔥 actualizar mesas
+const nuevasMesas = eventoActual.mesas.map(m =>
+  m.id === mesa.id
+    ? { ...m, invitadosIds: invitadosTemp }
+    : m
+);
+
+// 🔥 actualizar invitados (CLAVE)
+const nuevosInvitados = eventoActual.invitados.map(inv => {
+
+  if (invitadosTemp.includes(inv.id)) {
+    return { ...inv, mesaId: mesa.id };
+  }
+
+  if (inv.mesaId === mesa.id && !invitadosTemp.includes(inv.id)) {
+    return { ...inv, mesaId: null };
+  }
+
+  return inv;
+});
+
+handleActualizarEvento({
+  mesas: nuevasMesas,
+  invitados: nuevosInvitados
+});
+          setMesaActivaId(null);
+        }}
+        style={{
+          marginTop: "10px",
+          width: "100%",
+          padding: "8px",
+          background: "#c9a86a",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer"
+        }}
+      >
+        Confirmar
+      </button>
+
+    </div>
+  )}
+
+</div>
 
               <div style={{minHeight: '80px', marginTop: '10px'}}>
                 {(mesa.invitadosIds || []).map(id => {
