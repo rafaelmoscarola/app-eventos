@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { jsPDF } from 'jspdf';
 import { db } from "./firebase";
-import { collection, addDoc, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { Routes, Route, useParams } from "react-router-dom";
 
 /**
@@ -39,11 +39,12 @@ const injectStyles = () => {
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
     body { 
-      font-family: 'Plus Jakarta Sans', sans-serif; 
-      background: var(--lb-bg); 
-      color: var(--lb-dark);
-      line-height: 1.6;
-    }
+  font-family: 'Plus Jakarta Sans', sans-serif; 
+  background: var(--lb-bg); 
+  color: var(--lb-dark);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
 
     /* SCROLLBAR CUSTOM */
     ::-webkit-scrollbar { width: 6px; }
@@ -110,16 +111,49 @@ const injectStyles = () => {
     }
 
     .main-wrapper { margin-left: 320px; width: calc(100% - 320px); }
+    @media (max-width: 768px) {
+  .main-wrapper {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+}
 
     /* DASHBOARD / HOME */
     .hero-banner {
-      height: 400px;
-background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://i.ibb.co/sd3B2NfM/Chat-GPT-Image-1-may-2026-07-21-43.png');      background-size: cover; background-position: center;
-      padding: 80px; color: white;
-      display: flex; flex-direction: column; justify-content: flex-end;
-    }
+  height: 400px;
+  background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://i.ibb.co/sd3B2NfM/Chat-GPT-Image-1-may-2026-07-21-43.png');
+  background-size: cover;
+  background-position: center;
+  padding: 80px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+  @media (max-width: 768px) {
+  .hero-banner {
+    margin-left: -20px;
+    margin-right: -20px;
+    width: calc(100% + 40px);
+    padding: 20px;
+    height: 220px;
+  }
+}
+
+/* 📱 MOBILE */
+@media (max-width: 768px) {
+  .hero-banner {
+    height: 220px;
+    padding: 20px;
+  }
+}
 
     .hero-text { font-family: 'Playfair Display', serif; font-size: 4rem; margin-bottom: 10px; }
+    @media (max-width: 768px) {
+  .hero-text {
+    font-size: 1.8rem;
+  }
+}
 
     .projects-section { padding: 60px; }
     .grid-container { 
@@ -127,6 +161,11 @@ background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://i.ib
       grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); 
       gap: 40px; 
     }
+      @media (max-width: 768px) {
+  .projects-section {
+    padding: 20px;
+  }
+}
 
     .project-card {
       background: var(--lb-white); border-radius: 30px; overflow: visible;
@@ -161,7 +200,7 @@ background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://i.ib
     /* WORKSPACE EDITOR */
     .editor-layout {
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 /* 📱 RESPONSIVE CELULAR */
@@ -173,7 +212,7 @@ background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://i.ib
 }
     .editor-sidebar {
       width: 420px; background: var(--lb-white); border-right: 1px solid var(--lb-gray-light);
-      display: flex; flex-direction: column; padding: 40px;
+      display: flex; flex-direction: column; padding: 40px; overflow-y: auto;
     }
 
       /* 📱 RESPONSIVE CELULAR */
@@ -199,10 +238,10 @@ background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://i.ib
     }
     .input-field:focus { outline: none; border-color: var(--lb-gold); background: white; }
 
-    .guest-list-container {
-      flex: 1; overflow-y: auto; margin-top: 30px; padding-right: 5px;
-    }
-
+ .guest-list-container {
+  margin-top: 30px;
+  padding-right: 5px;
+}
     .guest-item {
       display: flex; justify-content: space-between; align-items: center;
       background: white; padding: 12px 18px; border-radius: 14px;
@@ -240,7 +279,162 @@ background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://i.ib
       font-size: 0.65rem; font-weight: 800; color: var(--lb-gold);
       background: var(--lb-gold-light); padding: 4px 10px; border-radius: 20px;
     }
-  `;
+  /* ============================= */
+/* SPLASH CLIENTE */
+/* ============================= */
+
+.splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+
+  background-image: url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1600');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 1.5s ease;
+}
+.splash-screen.fade-out {
+  opacity: 0;
+  filter: brightness(1.2) sepia(0.3);
+}
+  opacity: 0;
+}
+.splash-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    rgba(0,0,0,0.85),
+    rgba(120,100,50,0.4)
+  );
+}
+
+.splash-content {
+  position: relative;
+  text-align: center;
+  color: white;
+  animation: fadeIn 1.2s ease;
+}
+
+.splash-logo {
+  font-family: 'Brittany Signature', cursive !important;
+  font-size: 4rem;
+  margin-bottom: 20px;
+  .splash-logo {
+  font-family: 'Brittany Signature', cursive !important;
+  font-size: 5rem;
+  margin-bottom: 20px;
+
+  text-shadow: 0 0 50px rgba(255, 215, 120, 0.4);
+}
+}
+
+.splash-sub {
+  .splash-sub {
+  font-size: 1.5rem;
+  margin-bottom: 40px;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}
+}
+
+.splash-btn {
+  position: relative;
+  padding: 18px 40px;
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  border-radius: 14px;
+
+  background: linear-gradient(135deg, #d4af37, #b8962e);
+  color: white;
+
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+
+  transition: all 0.3s ease;
+}
+  .splash-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.6),
+    transparent
+  );
+
+  transform: skewX(-20deg);
+  animation: shine 3s infinite;
+}
+  @keyframes shine {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+  .splash-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 15px 40px rgba(212,175,55,0.5);
+}
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}/* PARTÍCULAS DORADAS */
+
+.particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.particles span {
+  position: absolute;
+  display: block;
+  width: 6px;
+  height: 6px;
+  background: rgba(255, 215, 120, 0.8);
+  border-radius: 50%;
+  animation: floatParticles linear infinite;
+}
+
+.particles span:nth-child(1) { left: 10%; animation-duration: 8s; top: 90%; }
+.particles span:nth-child(2) { left: 30%; animation-duration: 10s; top: 95%; }
+.particles span:nth-child(3) { left: 50%; animation-duration: 7s; top: 85%; }
+.particles span:nth-child(4) { left: 70%; animation-duration: 9s; top: 92%; }
+.particles span:nth-child(5) { left: 85%; animation-duration: 11s; top: 88%; }
+.particles span:nth-child(6) { left: 60%; animation-duration: 6s; top: 96%; }
+
+@keyframes floatParticles {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-120vh);
+    opacity: 0;
+  }
+}`;
   document.head.appendChild(style);
 };
 
@@ -249,6 +443,7 @@ injectStyles();
 const AppContent = () => {
   const { id } = useParams();
   const esCliente = !!id;
+  const [pantallaInicio, setPantallaInicio] = useState(esCliente);
   // ---------------------------------------------------------
   // ESTADO Y PERSISTENCIA
   // ---------------------------------------------------------
@@ -265,16 +460,13 @@ const [nuevaFecha, setNuevaFecha] = useState("");
     
     const lista = [];
 
-    snapshot.forEach(doc => {
-      const data = doc.data();
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
 
-      if (esCliente && id) {
-        if (String(data.id) === id) {
-          lista.push(data);
-        }
-      } else {
-        lista.push(data);
-      }
+      lista.push({
+        ...data,
+        _docId: docSnap.id
+      });
     });
 
     setEventos(lista);
@@ -284,11 +476,8 @@ const [nuevaFecha, setNuevaFecha] = useState("");
 
   return () => unsub();
 
-}, [id]);
+}, []);
   // Guardado automático
-  useEffect(() => {
-    localStorage.setItem('LB_STUDIO_STORAGE_V3', JSON.stringify(eventos));
-  }, [eventos]);
 
   // Evento activo memorizado
   const eventoActual = useMemo(() => {
@@ -300,9 +489,10 @@ const [nuevaFecha, setNuevaFecha] = useState("");
   return eventos.find(e => e.id === eventoActivoId);
 
 }, [eventos, eventoActivoId, id]);
+const estaBloqueado = esCliente && eventoActual?.cerrado;
 const guardarEvento = async (evento) => {
   try {
-    const ref = doc(db, "eventos", evento.id.toString());
+    const ref = doc(db, "eventos", evento._docId); // 🔥 CAMBIO CLAVE
     await updateDoc(ref, evento);
     console.log("💾 Evento guardado en Firebase");
   } catch (error) {
@@ -355,13 +545,16 @@ const terminos = ['event-hall', 'party-decor', 'celebration', 'wedding-venue'];
 const fotoAzar = terminos[Math.floor(Math.random() * terminos.length)];
 
 const nuevo = {
+  
   id: nuevoId,
   nombre: nuevoNombre,
   fecha: nuevaFecha || "",
+  cerrado: false,
   img: `https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=800&sig=${nuevoId}&q=${fotoAzar}`,
   invitados: [],
   mesas: [],
   contadorMesas: 1
+  
 };
 
 try {
@@ -375,24 +568,37 @@ nuevo.id = docRef.id;
   console.log("✅ Guardado en Firebase");
 
   // 🔥 después guarda en tu app (local)
-  setEventos(prev => [...prev, nuevo]);
+
 
   setNuevoNombre("");
   setNuevaFecha("");
 
-  setTimeout(() => {
-    setEventoActivoId(nuevoId);
-  }, 100);
+setEventoActivoId(docRef.id);
 
 } catch (error) {
   console.error("❌ Error Firebase:", error);
   alert("Error al guardar en Firebase");
 }
 };
-  const handleEliminarProyecto = (id, e) => {
+
+const handleEliminarProyecto = async (docId, e) => {
   e.stopPropagation();
+
   if(window.confirm("¿Seguro que deseas eliminar este proyecto por completo?")) {
-    setEventos(eventos.filter(ev => ev.id !== id));
+
+    try {
+      await deleteDoc(doc(db, "eventos", docId));
+
+      setEventos(prev => prev.filter(ev => ev._docId !== docId));
+
+      setEventoActivoId(null);
+
+      console.log("🗑️ Evento eliminado correctamente");
+
+    } catch (error) {
+      console.error("❌ Error al eliminar:", error);
+      alert("Error al eliminar el evento");
+    }
   }
 };
 const calcularDias = (fecha) => {
@@ -414,6 +620,7 @@ const calcularDias = (fecha) => {
   // GESTIÓN DE INVITADOS
   // ---------------------------------------------------------
   const handleImportarMasivo = () => {
+    if (estaBloqueado) return;
     const textarea = document.getElementById('bulk-guests');
     const texto = textarea.value;
     if (!texto.trim()) return;
@@ -447,6 +654,8 @@ const calcularDias = (fecha) => {
   // GESTIÓN DE MESAS
   // ---------------------------------------------------------
   const handleAgregarMesa = (vip = false) => {
+    if (estaBloqueado) return;
+
     const nuevaMesa = {
       id: Date.now(),
       numero: vip ? "MESA PRINCIPAL" : eventoActual.contadorMesas,
@@ -461,6 +670,7 @@ const calcularDias = (fecha) => {
   };
 
   const handleEliminarMesa = (mId) => {
+    if (estaBloqueado) return;
     if(!window.confirm("¿Eliminar mesa? Los invitados volverán a la lista de espera.")) return;
     
     const invitadosDesasignados = eventoActual.invitados.map(i => 
@@ -474,6 +684,7 @@ const calcularDias = (fecha) => {
   };
 
   const handleAsignarMesa = (invId, mesaId) => {
+    if (estaBloqueado) return;
     if (!invId) return;
     
     // 1. Actualizar mesa
@@ -491,6 +702,7 @@ const calcularDias = (fecha) => {
   };
 
   const handleQuitarDeMesa = (invId, mesaId) => {
+    if (estaBloqueado) return;
     const nuevasMesas = eventoActual.mesas.map(m => {
       if (m.id === mesaId) return { ...m, invitadosIds: m.invitadosIds.filter(id => id !== invId) };
       return m;
@@ -695,7 +907,7 @@ const calcularDias = (fecha) => {
 
   <button
     className="delete-btn"
-    onClick={(event) => handleEliminarProyecto(e.id, event)}
+    onClick={(event) => handleEliminarProyecto(e._docId, event)}
   >
     🗑️ Eliminar
   </button>
@@ -726,7 +938,56 @@ if (!eventoActual) {
   // ---------------------------------------------------------
   // RENDER: EDITOR DE EVENTO (WORKSPACE)
   // ---------------------------------------------------------
- return (
+ if (pantallaInicio && esCliente) {
+  return (
+    <div className="splash-screen">
+
+      <div className="splash-overlay" />
+
+      <div className="particles">
+  <span></span>
+  <span></span>
+  <span></span>
+  <span></span>
+  <span></span>
+  <span></span>
+</div>
+      <div className="splash-content">
+
+        <h1 className="splash-logo">
+          Luisina Bagnaroli
+        </h1>
+
+        <p className="splash-sub">
+          <p className="splash-sub">
+  El mejor momento para celebrar, es <strong>siempre</strong>
+</p>
+        </p>
+
+        <button 
+          className="btn-luxury splash-btn"
+          onClick={() => {
+  const splash = document.querySelector('.splash-screen');
+
+  if (splash) {
+    splash.classList.add('fade-out');
+    splash.style.background = "black"; // 👈 esto es para probar
+  }
+
+  setTimeout(() => {
+    setPantallaInicio(false);
+  }, 1500);
+}}
+        >
+          ✨ Continuar
+        </button>
+
+      </div>
+
+    </div>
+  );
+}
+  return (
   <div className="app-container" style={{background: '#f9f7f4'}}>
     <div className="editor-layout">
 
@@ -756,39 +1017,105 @@ if (!eventoActual) {
   onChange={(e) => handleActualizarEvento({ fecha: e.target.value })}
   style={{marginBottom: '20px'}}
 />
+{!eventoActual.cerrado && (
+  <button
+    className="btn-luxury"
+    style={{marginBottom: '20px', background: 'var(--lb-dark)'}}
+    onClick={() => {
+      const confirmar = window.confirm(
+        "Al cerrar la lista de invitados ya no podrás realizar cambios.\n\n¿Deseas continuar?"
+      );
+      if (confirmar) {
+        handleActualizarEvento({ cerrado: true });
+      }
+    }}
+  >
+    🔒 Cerrar evento
+    
+  </button>
+)}
+
+{eventoActual.cerrado && (
+  <p style={{
+    fontSize: '0.8rem',
+    color: 'var(--lb-gold)',
+    fontWeight: 600,
+    marginBottom: '20px'
+  }}>
+    🔒 Evento cerrado
+  </p>
+)}
 
         <div className="bulk-box">
           <p style={{fontSize: '0.7rem', fontWeight: 800, letterSpacing: '2px', color: 'var(--lb-gold)', marginBottom: '10px'}}>IMPORTACIÓN RÁPIDA</p>
           <textarea 
-            id="bulk-guests" 
-            className="input-field" 
-            style={{height: '120px', resize: 'none'}} 
-            placeholder="Pega la lista separada por renglones..."
-          />
-          <button className="btn-luxury" style={{width: '100%', marginBottom: '30px'}} onClick={handleImportarMasivo}>Cargar Invitados</button>
+  id="bulk-guests"
+  className="input-field"
+  style={{height: '120px', resize: 'none'}}
+  placeholder="Pega la lista separada por renglones..."
+  disabled={estaBloqueado}
+/>
+          <button 
+  className="btn-luxury" 
+  onClick={handleImportarMasivo}
+  disabled={estaBloqueado}
+  style={{
+    width: '100%',
+    marginBottom: '30px',
+    opacity: estaBloqueado ? 0.5 : 1
+  }}
+>
+  Cargar Invitados
+</button>
         </div>
 
-        <div className="search-box">
-          <input 
-            className="input-field" 
-            placeholder="Buscar invitado..." 
-            value={terminoBusqueda}
-            onChange={(e) => setTerminoBusqueda(e.target.value)}
-          />
-        </div>
+        <input 
+  className="input-field" 
+  placeholder="Buscar invitado..."
+  value={terminoBusqueda}
+  onChange={(e) => setTerminoBusqueda(e.target.value)}
+  disabled={estaBloqueado}
+/>
 
         <div className="guest-list-container">
-          {eventoActual.invitados
+          {(eventoActual.invitados || [])
             .filter(i => i.nombre.toLowerCase().includes(terminoBusqueda.toLowerCase()))
             .map(inv => (
-              <div key={inv.id} className="guest-item" style={{opacity: inv.mesaId ? 0.6 : 1}}>
-                <span style={{fontSize: '0.85rem', fontWeight: 500}}>{inv.nombre}</span>
-                <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
-                  {inv.mesaId && <span className="badge-assigned">EN MESA</span>}
-                  <button className="delete-btn" style={{fontSize:'0.9rem'}} onClick={() => handleEliminarInvitadoTotal(inv.id)}>×</button>
-                </div>
-              </div>
-            ))
+  <div 
+    key={inv.id} 
+    className="guest-item" 
+    style={{
+      opacity: inv.mesaId ? 0.5 : 1,
+      pointerEvents: estaBloqueado ? 'none' : 'auto'
+    }}
+  >
+    <span style={{
+      fontSize: '0.85rem',
+      fontWeight: 500
+    }}>
+      {inv.nombre}
+    </span>
+
+    <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+
+      {inv.mesaId && (
+        <span className="badge-assigned">
+          SENTADO
+        </span>
+      )}
+
+      <button 
+        className="delete-btn" 
+        style={{fontSize:'0.9rem'}}
+        onClick={() => handleEliminarInvitadoTotal(inv.id)}
+        disabled={estaBloqueado}
+      >
+        ×
+      </button>
+
+    </div>
+  </div>
+))
           }
         </div>
 
@@ -804,14 +1131,33 @@ if (!eventoActual) {
       </aside>
 
       <main className="editor-canvas">
-        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '50px'}}>
+        <div style={{
+  display: 'flex',
+  flexDirection: window.innerWidth < 768 ? 'column' : 'row',
+  justifyContent: 'space-between',
+  alignItems: window.innerWidth < 768 ? 'center' : 'center',
+  marginBottom: '50px',
+  gap: window.innerWidth < 768 ? '15px' : '0px',
+  textAlign: window.innerWidth < 768 ? 'center' : 'left'
+}}>
           <div>
-            <h3 style={{fontFamily: 'Playfair Display', fontSize: '2.2rem'}}>Plano de Mesas</h3>
+            <h3 style={{fontFamily: 'Playfair Display', fontSize: '2.2rem' , textAlign: window.innerWidth < 768 ? 'center' : 'left'}}>Plano de Mesas</h3>
             <p style={{color: 'var(--lb-gray-mid)'}}>Asigna tus invitados a las mesas del salón</p>
           </div>
-          <div style={{display: 'flex', gap: '15px'}}>
-            <button className="btn-luxury btn-outline" onClick={() => handleAgregarMesa(false)}>+ Mesa Común</button>
-            <button className="btn-luxury" onClick={() => handleAgregarMesa(true)}>✨ Mesa VIP</button>
+          <div style={{
+  display: 'flex',
+  gap: '15px',
+  justifyContent: window.innerWidth < 768 ? 'center' : 'flex-start',
+  flexWrap: 'wrap'
+}}>
+            <button className="btn-luxury btn-outline"
+             onClick={() => handleAgregarMesa(false)}
+              disabled={estaBloqueado}
+             >+ Mesa Común</button>
+            <button className="btn-luxury"
+            onClick={() => handleAgregarMesa(true)}
+            disabled={estaBloqueado}
+              >✨ Mesa VIP</button>
           </div>
         </div>
 
@@ -820,11 +1166,15 @@ if (!eventoActual) {
             <div key={mesa.id} className={`mesa-card ${mesa.esVIP ? 'vip-style' : ''}`}>
               <div style={{display:'flex', justifyContent:'space-between'}}>
                 <span className="mesa-num">{mesa.esVIP ? "✨ PRINCIPAL" : `MESA NÚMERO ${mesa.numero}`}</span>
-                <button className="delete-btn" onClick={() => handleEliminarMesa(mesa.id)}>×</button>
+                <button className="delete-btn"
+                onClick={() => handleEliminarMesa(mesa.id)}
+                disabled={estaBloqueado}
+                  >×</button>
               </div>
 
               <select 
                 className="input-field" 
+                disabled={estaBloqueado}
                 style={{fontSize: '0.8rem', padding: '10px'}}
                 onChange={(e) => handleAsignarMesa(Number(e.target.value), mesa.id)}
                 value=""
@@ -843,7 +1193,7 @@ if (!eventoActual) {
                   return g ? (
                     <div key={id} className="guest-item" style={{padding: '8px 12px', background: '#fcfcfc'}}>
                       <span style={{fontSize: '0.8rem'}}>{g.nombre}</span>
-                      <button className="delete-btn" style={{fontSize: '0.8rem'}} onClick={() => handleQuitarDeMesa(id, mesa.id)}>×</button>
+                      <button className="delete-btn" style={{fontSize: '0.8rem'}} onClick={() => !estaBloqueado && handleQuitarDeMesa(id, mesa.id)}>×</button>
                     </div>
                   ) : null;
                 })}
