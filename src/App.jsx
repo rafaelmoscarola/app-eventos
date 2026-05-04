@@ -914,7 +914,8 @@ transition: "opacity 2s ease",
     {/* CONTENIDO */}
     <div style={{
       position: "relative",
-      zIndex: 2
+      zIndex: 2 
+      
     }}>
 
       {/* NOMBRE */}
@@ -962,7 +963,7 @@ transition: "opacity 2s ease",
     </div>
     <div style={{
   position: "absolute",
-bottom: "0",
+bottom: "50px",
 left: "0",
 width: "100%",
 display: "flex",
@@ -1025,7 +1026,7 @@ backdropFilter: "blur(6px)",
       minHeight: "100vh",
       display: "flex",
       justifyContent: "center",
-      alignItems: "center",
+      alignItems: "flex-start",
       background: "#f4f1ea"
     }}>
 
