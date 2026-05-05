@@ -1,8 +1,12 @@
+import { getDocs, query, where } from "firebase/firestore";
+import { descargarMensajesPDF } from "./qrUtils";
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { jsPDF } from 'jspdf';
 import { db } from "./firebase";
 import { collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { Routes, Route, useParams } from "react-router-dom";
+import MensajesEvento from "./MensajesEvento";
+import { generarQRPDF } from "./qrUtils";
 
 /**
  * LUISINA BAGNAROLI - SISTEMA DE GESTIÓN DE EVENTOS 2026
@@ -304,8 +308,6 @@ const injectStyles = () => {
   opacity: 0;
   filter: brightness(1.2) sepia(0.3);
 }
-  opacity: 0;
-}
 .splash-overlay {
   position: absolute;
   width: 100%;
@@ -325,25 +327,17 @@ const injectStyles = () => {
 
 .splash-logo {
   font-family: 'Brittany Signature', cursive !important;
-  font-size: 4rem;
-  margin-bottom: 20px;
-  .splash-logo {
-  font-family: 'Brittany Signature', cursive !important;
   font-size: 5rem;
   margin-bottom: 20px;
-
   text-shadow: 0 0 50px rgba(255, 215, 120, 0.4);
 }
-}
 
-.splash-sub {
-  .splash-sub {
+..splash-sub {
   font-size: 1.5rem;
   margin-bottom: 40px;
   font-weight: 300;
   letter-spacing: 0.5px;
   text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-}
 }
 
 .splash-btn {
@@ -391,11 +385,8 @@ const injectStyles = () => {
   transform: scale(1.05);
   box-shadow: 0 15px 40px rgba(212,175,55,0.5);
 }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}/* PARTÍCULAS DORADAS */
+  
+/* PARTÍCULAS DORADAS */
 
 .particles {
   position: absolute;
@@ -1184,6 +1175,31 @@ backdropFilter: "blur(6px)",
 >
   Compartir evento
 </button>
+<button
+  className="btn-luxury btn-outline"
+  style={{ width: "100%" }}
+ onClick={async () => {
+  const snapshot = await getDocs(
+    query(
+      collection(db, "mensajes"),
+      where("eventoId", "==", e.id)
+    )
+  );
+
+  const mensajes = snapshot.docs.map(doc => doc.data());
+
+  descargarMensajesPDF(mensajes, e.nombre);
+}}
+>
+  📄 Descargar mensajes
+</button>
+<button
+  className="btn-luxury btn-outline"
+  style={{width: '100%'}}
+  onClick={() => generarQRPDF(e.id)}
+>
+  📱 Descargar QR
+</button>
 
   <button
     className="delete-btn"
@@ -1576,6 +1592,29 @@ if (esVistaLista && eventoActual) {
   <button
     className="btn-luxury"
     style={{
+      marginTop: "10px",
+      background: "#000"
+    }}
+    onClick={async () => {
+      const snapshot = await getDocs(
+        query(
+          collection(db, "mensajes"),
+          where("eventoId", "==", eventoActual.id)
+        )
+      );
+
+      const mensajes = snapshot.docs.map(doc => doc.data());
+
+      descargarMensajesPDF(mensajes, eventoActual.nombre);
+    }}
+  >
+    📄 Descargar mensajes
+  </button>
+)}
+            {esCliente && (
+  <button
+    className="btn-luxury"
+    style={{
       marginTop: "15px",
       background: "var(--lb-gold-dark)"
     }}
@@ -1752,6 +1791,7 @@ handleActualizarEvento({
     <Routes>
       <Route path="/" element={<AppContent />} />
       <Route path="/evento/:id" element={<AppContent />} />
+      <Route path="/evento/:id/mensajes" element={<MensajesEvento />} />
     </Routes>
   );
 };
