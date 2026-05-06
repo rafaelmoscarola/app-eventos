@@ -2,7 +2,7 @@ import QRCode from "qrcode";
 import { jsPDF } from "jspdf";
 
 export const generarQRPDF = async (eventoId) => {
-  const url = `http://localhost:5173/evento/${eventoId}/mensajes`;
+  const url = `https://app-eventos-rouge.vercel.app/evento/${eventoId}/mensajes`;
 
   const qr = await QRCode.toDataURL(url);
 
