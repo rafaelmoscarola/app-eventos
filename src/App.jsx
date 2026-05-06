@@ -1,9 +1,18 @@
-import { getDocs, query, where } from "firebase/firestore";
 import { descargarMensajesPDF } from "./qrUtils";
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { jsPDF } from 'jspdf';
 import { db } from "./firebase";
-import { collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  onSnapshot,
+  doc,
+  updateDoc,
+  deleteDoc,
+  getDocs,
+  query,
+  where
+} from "firebase/firestore";
 import { Routes, Route, useParams } from "react-router-dom";
 import MensajesEvento from "./MensajesEvento";
 import { generarQRPDF } from "./qrUtils";
@@ -604,12 +613,25 @@ setEventoActivoId(docRef.id);
 }
 };
 
-const handleEliminarProyecto = async (docId, e) => {
+const handleEliminarProyecto = async (docId, eventoId, e) => {
   e.stopPropagation();
 
   if(window.confirm("¿Seguro que deseas eliminar este proyecto por completo?")) {
 
     try {
+      // 🔥 BORRAR MENSAJES RELACIONADOS
+const mensajesRef = collection(db, "mensajes");
+
+const q = query(
+  mensajesRef,
+  where("eventoId", "==", eventoId)
+);
+
+const snapshot = await getDocs(q);
+
+for (const mensaje of snapshot.docs) {
+  await deleteDoc(doc(db, "mensajes", mensaje.id));
+}
       await deleteDoc(doc(db, "eventos", docId));
 
       setEventos(prev => prev.filter(ev => ev._docId !== docId));
@@ -1203,7 +1225,7 @@ backdropFilter: "blur(6px)",
 
   <button
     className="delete-btn"
-    onClick={(event) => handleEliminarProyecto(e._docId, event)}
+    onClick={(event) => handleEliminarProyecto(e._docId, e.id, event)}
   >
     🗑️ Eliminar
   </button>
