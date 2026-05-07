@@ -347,7 +347,7 @@ const injectStyles = () => {
   text-shadow: 0 0 50px rgba(255, 215, 120, 0.4);
 }
 
-..splash-sub {
+.splash-sub {
   font-size: 1.5rem;
   margin-bottom: 40px;
   font-weight: 300;
@@ -478,12 +478,15 @@ const [nuevaFecha, setNuevaFecha] = useState("");
 const [invitadosTemp, setInvitadosTemp] = useState([]);
 const [mesaActivaId, setMesaActivaId] = useState(null);
 const [busquedaInvitado, setBusquedaInvitado] = useState("");
+const [busquedaMesa, setBusquedaMesa] = useState("");
 const [resultadoMesa, setResultadoMesa] = useState(null);
 const [tagsInvitado, setTagsInvitado] = useState([]);
 const [invitadosBulk, setInvitadosBulk] = useState("");
 const [previewInvitados, setPreviewInvitados] = useState([]);
 const [invitadoSeleccionado, setInvitadoSeleccionado] = useState(null);
 const [mostrarInvitados, setMostrarInvitados] = useState(false);
+const [editandoInvitado, setEditandoInvitado] = useState(null);
+const [nombreEditado, setNombreEditado] = useState("");
 const textareaRef = useRef(null);
 
 
@@ -1134,6 +1137,7 @@ gap: "15px",
 padding: "0 0 25px 0",
 zIndex: 5,
 }}>
+  
 
   {/* INSTAGRAM */}
   <a
@@ -1949,6 +1953,23 @@ onChange={(e) => setInvitadosBulk(e.target.value)}
           SENTADO
         </span>
       )}
+      <button
+  className="delete-btn"
+  style={{
+    fontSize:'0.9rem',
+    color:'#c5a059'
+  }}
+  onClick={(e) => {
+
+    e.stopPropagation();
+
+    setEditandoInvitado(inv.id);
+    setNombreEditado(inv.nombre);
+
+  }}
+>
+  ✏️
+</button>
 
       <button 
   className="delete-btn" 
@@ -1963,6 +1984,121 @@ onChange={(e) => setInvitadosBulk(e.target.value)}
 </button>
 
     </div>
+    {editandoInvitado === inv.id && (
+
+  <div style={{
+    marginTop: "10px",
+    padding: "12px",
+    borderRadius: "12px",
+    background: "#f8f6f2",
+    border: "1px solid #ddd"
+  }}>
+
+    <input
+      value={nombreEditado}
+      onChange={(e) =>
+        setNombreEditado(e.target.value)
+      }
+      className="input-field"
+      style={{marginBottom: "10px"}}
+    />
+
+    <div style={{
+      display: "flex",
+      gap: "6px",
+      flexWrap: "wrap",
+      marginBottom: "10px"
+    }}>
+
+      {[
+        "bebe",
+        "infantil",
+        "vegano",
+        "sintacc",
+        "diabetico"
+      ].map(tag => {
+
+        const activo =
+          inv.tags?.includes(tag);
+
+        return (
+
+          <button
+            key={tag}
+            type="button"
+            onClick={() => {
+
+              const nuevosInvitados =
+                eventoActual.invitados.map(i => {
+
+                  if (i.id !== inv.id) return i;
+
+                  const yaTiene =
+                    i.tags?.includes(tag);
+
+                  return {
+                    ...i,
+                    tags: yaTiene
+                      ? i.tags.filter(t => t !== tag)
+                      : [...(i.tags || []), tag]
+                  };
+
+                });
+
+              handleActualizarEvento({
+                invitados: nuevosInvitados
+              });
+
+            }}
+            style={{
+              padding: "6px 10px",
+              borderRadius: "20px",
+              border: activo
+                ? "2px solid #000"
+                : "1px solid #ddd",
+              background: "#fff",
+              cursor: "pointer",
+              fontSize: "0.7rem"
+            }}
+          >
+            {tag}
+          </button>
+
+        );
+
+      })}
+
+    </div>
+
+    <button
+      className="btn-luxury"
+      style={{width:"100%"}}
+      onClick={() => {
+
+        const nuevosInvitados =
+          eventoActual.invitados.map(i =>
+            i.id === inv.id
+              ? {
+                  ...i,
+                  nombre: nombreEditado
+                }
+              : i
+          );
+
+        handleActualizarEvento({
+          invitados: nuevosInvitados
+        });
+
+        setEditandoInvitado(null);
+
+      }}
+    >
+      Guardar cambios
+    </button>
+
+  </div>
+
+)}
   </div>
 ))
           }
@@ -2098,16 +2234,46 @@ const invitado = eventoActual.invitados.find(inv =>
       maxHeight: "200px",
       overflowY: "auto",
       zIndex: 10
+      
     }}>
+      <input
+  type="text"
+  placeholder="Buscar invitado..."
+  value={busquedaMesa}
+  onChange={(e) =>
+    setBusquedaMesa(e.target.value)
+  }
+  style={{
+    width: "100%",
+    marginBottom: "10px",
+    padding: "8px",
+    borderRadius: "8px",
+    border: "1px solid #ddd"
+  }}
+/>    
 
       {(eventoActual.invitados || [])
-        .filter(inv => {
-          const yaAsignado = eventoActual.mesas.some(m =>
-            m.id !== mesa.id && m.invitadosIds.includes(inv.id)
-          );
-          return !yaAsignado;
-        })
-        .map(inv => (
+  .filter(inv => {
+
+    const yaAsignado = eventoActual.mesas.some(m =>
+      m.id !== mesa.id &&
+      m.invitadosIds.includes(inv.id)
+    );
+
+    const coincideBusqueda =
+      inv.nombre
+        .toLowerCase()
+        .includes(busquedaMesa.toLowerCase());
+
+    return !yaAsignado && coincideBusqueda;
+
+  })
+
+  .sort((a, b) =>
+    a.nombre.localeCompare(b.nombre)
+  )
+
+  .map(inv => (
           <label key={inv.id} style={{ display: "block" }}>
             <input
               type="checkbox"
@@ -2151,17 +2317,23 @@ handleActualizarEvento({
   mesas: nuevasMesas,
   invitados: nuevosInvitados
 });
-          setMesaActivaId(null);
+
+setBusquedaMesa("");
+setMesaActivaId(null);
         }}
-        style={{
-          marginTop: "10px",
-          width: "100%",
-          padding: "8px",
-          background: "#c9a86a",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer"
-        }}
+       style={{
+  position: "sticky",
+  bottom: "0",
+  marginTop: "10px",
+  width: "100%",
+  padding: "10px",
+  background: "#c9a86a",
+  border: "none",
+  borderRadius: "10px",
+  cursor: "pointer",
+  zIndex: 20,
+  boxShadow: "0 -4px 10px rgba(0,0,0,0.08)"
+}}
       >
         Confirmar
       </button>
