@@ -1,5 +1,4 @@
 import { descargarMensajesPDF } from "./qrUtils";
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { jsPDF } from 'jspdf';
 import { db } from "./firebase";
 import {
@@ -16,6 +15,13 @@ import {
 import { Routes, Route, useParams } from "react-router-dom";
 import MensajesEvento from "./MensajesEvento";
 import { generarQRPDF } from "./qrUtils";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef
+} from "react";
 
 /**
  * LUISINA BAGNAROLI - SISTEMA DE GESTIÓN DE EVENTOS 2026
@@ -473,7 +479,12 @@ const [invitadosTemp, setInvitadosTemp] = useState([]);
 const [mesaActivaId, setMesaActivaId] = useState(null);
 const [busquedaInvitado, setBusquedaInvitado] = useState("");
 const [resultadoMesa, setResultadoMesa] = useState(null);
-
+const [tagsInvitado, setTagsInvitado] = useState([]);
+const [invitadosBulk, setInvitadosBulk] = useState("");
+const [previewInvitados, setPreviewInvitados] = useState([]);
+const [invitadoSeleccionado, setInvitadoSeleccionado] = useState(null);
+const [mostrarInvitados, setMostrarInvitados] = useState(false);
+const textareaRef = useRef(null);
 
 
   useEffect(() => {
@@ -665,35 +676,55 @@ const calcularDias = (fecha) => {
   // GESTIÓN DE INVITADOS
   // ---------------------------------------------------------
   const handleImportarMasivo = () => {
-    if (estaBloqueado) return;
-    const textarea = document.getElementById('bulk-guests');
-    const texto = textarea.value;
-    if (!texto.trim()) return;
 
-    const lineas = texto.split('\n').filter(l => l.trim() !== "");
-    const nuevosInvitados = lineas.map(nombre => ({
+  if (estaBloqueado) return;
+
+  // 🔥 SI HAY PREVIEW → USA PREVIEW
+  if (previewInvitados.length > 0) {
+
+    const nuevosInvitados = previewInvitados.map(inv => ({
       id: Math.floor(Math.random() * 1000000) + Date.now(),
-      nombre: nombre.trim(),
-      mesaId: null
+      nombre: inv.nombre,
+      mesaId: null,
+      tags: inv.tags || []
     }));
 
     handleActualizarEvento({
-      invitados: [...(eventoActual.invitados || []), ...nuevosInvitados]
+      invitados: [
+        ...(eventoActual.invitados || []),
+        ...nuevosInvitados
+      ]
     });
-    textarea.value = "";
-  };
 
-  const handleEliminarInvitadoTotal = (id) => {
-    const invitadosFiltrados = eventoActual.invitados.filter(i => i.id !== id);
-    const mesasLimpias = eventoActual.mesas.map(m => ({
-      ...m, invitadosIds: (m.invitadosIds || []).filter(mid => mid !== id)
-    }));
+    setPreviewInvitados([]);
+    setInvitadoSeleccionado(null);
+    setInvitadosBulk("");
 
-    handleActualizarEvento({
-      invitados: invitadosFiltrados,
-      mesas: mesasLimpias
-    });
-  };
+    return;
+  }
+
+  // 🔥 SI NO HAY PREVIEW → IMPORTACIÓN SIMPLE
+  const lineas = invitadosBulk
+    .split("\n")
+    .filter(l => l.trim() !== "");
+
+  const nuevosInvitados = lineas.map(nombre => ({
+    id: Math.floor(Math.random() * 1000000) + Date.now(),
+    nombre: nombre.trim(),
+    mesaId: null,
+    tags: []
+  }));
+
+  handleActualizarEvento({
+    invitados: [
+      ...(eventoActual.invitados || []),
+      ...nuevosInvitados
+    ]
+  });
+
+  setInvitadosBulk("");
+
+};
 
   // ---------------------------------------------------------
   // GESTIÓN DE MESAS
@@ -764,7 +795,37 @@ handleActualizarEvento({
     handleActualizarEvento({ mesas: nuevasMesas, invitados: nuevosInvitados });
   };
 
+   const handleEliminarInvitadoTotal = (invId) => {
+
+  if (estaBloqueado) return;
+
+  const confirmar = window.confirm(
+    "¿Eliminar invitado?"
+  );
+
+  if (!confirmar) return;
+
+  // limpiar invitado de mesas
+  const nuevasMesas = eventoActual.mesas.map(m => ({
+    ...m,
+    invitadosIds: (m.invitadosIds || [])
+      .filter(id => id !== invId)
+  }));
+
+  // eliminar invitado
+  const nuevosInvitados =
+    eventoActual.invitados.filter(
+      inv => inv.id !== invId
+    );
+
+  handleActualizarEvento({
+    mesas: nuevasMesas,
+    invitados: nuevosInvitados
+  });
+
+};
   const handleQuitarDeMesa = (invId, mesaId) => {
+   
     if (estaBloqueado) return;
     const nuevasMesas = eventoActual.mesas.map(m => {
       if (m.id === mesaId) return { ...m, invitadosIds: m.invitadosIds.filter(id => id !== invId) };
@@ -800,7 +861,51 @@ handleActualizarEvento({
     
     listaAlfabetica.forEach((inv, index) => {
       const mesa = e.mesas.find(m => m.id === inv.mesaId);
-      doc.text(`${index + 1}. ${inv.nombre}`, margin, y);
+      const condiciones = (inv.tags || [])
+  .map(t => {
+
+    if (t === "bebe") return "BEBÉ";
+    if (t === "infantil") return "INFANTIL";
+    if (t === "vegano") return "VEGANO";
+    if (t === "sintacc") return "SIN TACC";
+    if (t === "diabetico") return "DIABÉTICO";
+
+    return t.toUpperCase();
+
+  })
+  .join(" · ");
+
+doc.setFontSize(10);
+doc.setTextColor(26,26,26);
+
+const textoPrincipal =
+  `${index + 1}. ${inv.nombre}`;
+
+doc.text(
+  textoPrincipal,
+  margin,
+  y
+);
+
+if (condiciones) {
+
+  const anchoTexto =
+    doc.getTextWidth(textoPrincipal);
+
+  doc.setFontSize(7);
+  doc.setTextColor(140);
+
+  doc.text(
+    condiciones.toLowerCase(),
+    margin + anchoTexto + 4,
+    y
+  );
+
+  // 🔥 RESTAURAR ESTILO
+  doc.setFontSize(10);
+  doc.setTextColor(26,26,26);
+
+}
       doc.text(mesa ? `Mesa: ${mesa.numero}` : "SIN ASIGNAR", 150, y);
       y += 8;
       if (y > 275) { doc.addPage(); y = 20; }
@@ -825,7 +930,51 @@ handleActualizarEvento({
         y += 8;
       } else {
         invs.forEach(i => {
-          doc.text(`   • ${i.nombre}`, margin, y);
+          const condiciones = (i.tags || [])
+  .map(t => {
+
+    if (t === "bebe") return "BEBÉ";
+    if (t === "infantil") return "INFANTIL";
+    if (t === "vegano") return "VEGANO";
+    if (t === "sintacc") return "SIN TACC";
+    if (t === "diabetico") return "DIABÉTICO";
+
+    return t.toUpperCase();
+
+  })
+  .join(" · ");
+
+doc.setFontSize(10);
+doc.setTextColor(26,26,26);
+
+const textoMesa =
+  `• ${i.nombre}`;
+
+doc.text(
+  textoMesa,
+  margin,
+  y
+);
+
+if (condiciones) {
+
+  const anchoTexto =
+    doc.getTextWidth(textoMesa);
+
+  doc.setFontSize(7);
+  doc.setTextColor(140);
+
+  doc.text(
+    condiciones.toLowerCase(),
+    margin + anchoTexto + 4,
+    y
+  );
+
+  // restaurar estilo
+  doc.setFontSize(10);
+  doc.setTextColor(26,26,26);
+
+}
           y += 7;
           if (y > 275) { doc.addPage(); y = 20; }
         });
@@ -1517,12 +1666,202 @@ if (esVistaLista && eventoActual) {
         <div className="bulk-box">
           <p style={{fontSize: '0.7rem', fontWeight: 800, letterSpacing: '2px', color: 'var(--lb-gold)', marginBottom: '10px'}}>IMPORTACIÓN RÁPIDA</p>
           <textarea 
+          ref={textareaRef}
   id="bulk-guests"
   className="input-field"
+  value={invitadosBulk}
+onChange={(e) => setInvitadosBulk(e.target.value)}
   style={{height: '120px', resize: 'none'}}
   placeholder="Pega la lista separada por renglones..."
   disabled={estaBloqueado}
 />
+
+{previewInvitados.length > 0 && (
+  <div style={{
+    marginBottom: "15px",
+    border: "1px solid #eee",
+    borderRadius: "14px",
+    overflow: "hidden"
+  }}>
+
+    {previewInvitados.map(inv => {
+
+      const seleccionado =
+        invitadoSeleccionado === inv.tempId;
+
+      return (
+
+        <div
+          key={inv.tempId}
+          onClick={() =>
+            setInvitadoSeleccionado(inv.tempId)
+          }
+          style={{
+            padding: "12px 14px",
+            cursor: "pointer",
+            background: seleccionado
+              ? "#f4ece0"
+              : "#fff",
+            borderBottom: "1px solid #eee",
+            transition: "0.2s",
+            boxShadow: seleccionado
+              ? "inset 0 0 0 2px #c5a059"
+              : "none"
+          }}
+        >
+
+          <div style={{
+            fontWeight: 500,
+            fontSize: "0.9rem"
+          }}>
+            {inv.nombre}
+          </div>
+
+          {inv.tags.length > 0 && (
+            <div style={{
+              marginTop: "5px",
+              fontSize: "0.7rem",
+              color: "#888"
+            }}>
+              {inv.tags.map(t => {
+
+                if (t === "bebe") return "BEBÉ";
+                if (t === "infantil") return "INFANTIL";
+                if (t === "vegano") return "VEGANO";
+                if (t === "sintacc") return "SIN TACC";
+                if (t === "diabetico") return "DIABÉTICO";
+
+                return t;
+
+              }).join(" · ")}
+            </div>
+          )}
+
+        </div>
+
+      );
+
+    })}
+
+  </div>
+)}
+<button
+  className="btn-luxury btn-outline"
+  style={{
+    width: "100%",
+    marginBottom: "15px"
+  }}
+  type="button"
+  onClick={() => {
+
+    const lineas = invitadosBulk
+      .split("\n")
+      .filter(l => l.trim() !== "");
+
+    const invitados = lineas.map((nombre, index) => ({
+      tempId: index,
+      nombre: nombre.trim(),
+      tags: []
+    }));
+
+    setPreviewInvitados(invitados);
+
+  }}
+>
+  Agregar condiciones
+</button>
+<div style={{
+  display: "flex",
+  gap: "8px",
+  marginTop: "12px",
+  flexWrap: "nowrap",
+  overflowX: "auto",
+  paddingBottom: "5px"
+}}>
+
+  {[
+    {
+      key: "bebe",
+      label: "👶 Bebé",
+      color: "#dcecff"
+    },
+    {
+      key: "infantil",
+      label: "🧸 Infantil",
+      color: "#ffe8d6"
+    },
+    {
+      key: "vegano",
+      label: "Vegano",
+      color: "#e3f4dc"
+    },
+    {
+      key: "sintacc",
+      label: "Sin TACC",
+      color: "#fff3cd"
+    },
+    {
+      key: "diabetico",
+      label: "Diabético",
+      color: "#ffd6d6"
+    }
+  ].map(tag => {
+
+    const activo = tagsInvitado.includes(tag.key);
+
+    return (
+      <button
+        key={tag.key}
+        type="button"
+        onClick={() => {
+
+  if (invitadoSeleccionado === null) {
+    alert("Tocá un invitado primero");
+    return;
+  }
+
+  setPreviewInvitados(prev =>
+    prev.map(inv => {
+
+      if (inv.tempId !== invitadoSeleccionado) {
+        return inv;
+      }
+
+      const yaTiene =
+        inv.tags.includes(tag.key);
+
+      return {
+        ...inv,
+        tags: yaTiene
+          ? inv.tags.filter(t => t !== tag.key)
+          : [...inv.tags, tag.key]
+      };
+
+    })
+  );
+
+}}
+        style={{
+          border: activo
+            ? "2px solid #000"
+            : "1px solid #ddd",
+          background: tag.color,
+          padding: "8px 14px",
+          borderRadius: "30px",
+          cursor: "pointer",
+          fontSize: "0.75rem",
+          whiteSpace: "nowrap",
+          fontWeight: 600,
+          opacity: activo ? 1 : 0.7,
+          transition: "0.2s"
+        }}
+      >
+        {tag.label}
+      </button>
+    );
+  })}
+
+</div>
           <button 
   className="btn-luxury" 
   onClick={handleImportarMasivo}
@@ -1544,8 +1883,24 @@ if (esVistaLista && eventoActual) {
   onChange={(e) => setTerminoBusqueda(e.target.value)}
   disabled={estaBloqueado}
 />
-
-        <div className="guest-list-container">
+<button
+  type="button"
+  onClick={() =>
+    setMostrarInvitados(prev => !prev)
+  }
+  className="btn-luxury btn-outline"
+  style={{
+    width: "100%",
+    marginTop: "20px",
+    marginBottom: "10px"
+  }}
+>
+  {mostrarInvitados
+    ? `▲ Ocultar invitados (${eventoActual.invitados.length})`
+    : `▼ Ver invitados (${eventoActual.invitados.length})`}
+</button>
+        {mostrarInvitados && (
+<div className="guest-list-container">
           {(eventoActual.invitados || [])
             .filter(i => i.nombre.toLowerCase().includes(terminoBusqueda.toLowerCase()))
             .map(inv => (
@@ -1561,7 +1916,30 @@ if (esVistaLista && eventoActual) {
       fontSize: '0.85rem',
       fontWeight: 500
     }}>
-      {inv.nombre}
+      <>
+  {inv.nombre}
+
+  {inv.tags?.length > 0 && (
+    <span style={{
+      display: "block",
+      fontSize: "0.7rem",
+      color: "#888",
+      marginTop: "3px"
+    }}>
+      {inv.tags.map(tag => {
+
+        if (tag === "bebe") return "BEBÉ";
+        if (tag === "infantil") return "INFANTIL";
+        if (tag === "vegano") return "VEGANO";
+        if (tag === "sintacc") return "SIN TACC";
+        if (tag === "diabetico") return "DIABÉTICO";
+
+        return tag;
+
+      }).join(" · ")}
+    </span>
+  )}
+</>
     </span>
 
     <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
@@ -1573,19 +1951,23 @@ if (esVistaLista && eventoActual) {
       )}
 
       <button 
-        className="delete-btn" 
-        style={{fontSize:'0.9rem'}}
-        onClick={() => handleEliminarInvitadoTotal(inv.id)}
-        disabled={estaBloqueado}
-      >
-        ×
-      </button>
+  className="delete-btn" 
+  style={{fontSize:'0.9rem'}}
+  onClick={(e) => {
+    e.stopPropagation();
+    handleEliminarInvitadoTotal(inv.id);
+  }}
+  disabled={estaBloqueado}
+>
+  ×
+</button>
 
     </div>
   </div>
 ))
           }
         </div>
+        )}
 
         {!esCliente && (
   <button 
