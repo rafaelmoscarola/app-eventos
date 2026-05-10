@@ -485,6 +485,7 @@ const [invitadosBulk, setInvitadosBulk] = useState("");
 const [previewInvitados, setPreviewInvitados] = useState([]);
 const [invitadoSeleccionado, setInvitadoSeleccionado] = useState(null);
 const [mostrarInvitados, setMostrarInvitados] = useState(false);
+const [mesaExpandida, setMesaExpandida] = useState(null);
 const [editandoInvitado, setEditandoInvitado] = useState(null);
 const [nombreEditado, setNombreEditado] = useState("");
 const textareaRef = useRef(null);
@@ -2189,14 +2190,33 @@ onChange={(e) => setInvitadosBulk(e.target.value)}
         <div className="mesa-grid">
           {eventoActual.mesas.map(mesa => (
             <div key={mesa.id} className={`mesa-card ${mesa.esVIP ? 'vip-style' : ''}`}>
-              <div style={{display:'flex', justifyContent:'space-between'}}>
-                <span className="mesa-num">{mesa.esVIP ? "✨ PRINCIPAL" : `MESA NÚMERO ${mesa.numero}`}</span>
+              <div
+  onClick={() =>
+    setMesaExpandida(
+      mesaExpandida === mesa.id
+        ? null
+        : mesa.id
+    )
+  }
+  style={{
+    display:'flex',
+    justifyContent:'space-between',
+    cursor:'pointer'
+  }}
+>
+                <span className="mesa-num">
+  {mesa.esVIP
+    ? `✨ PRINCIPAL (${mesa.invitadosIds?.length || 0})`
+    : `MESA NÚMERO ${mesa.numero} (${mesa.invitadosIds?.length || 0})`}
+</span>
                 <button className="delete-btn"
                 onClick={() => handleEliminarMesa(mesa.id)}
                 disabled={estaBloqueado}
                   >×</button>
               </div>
-
+                        
+              {mesaExpandida === mesa.id && (
+  <>
               <div style={{ position: "relative" }}>
 
   <button
@@ -2354,6 +2374,10 @@ setMesaActivaId(null);
                   ) : null;
                 })}
               </div>
+
+  </>
+)}
+
             </div>
           ))}
         </div>
