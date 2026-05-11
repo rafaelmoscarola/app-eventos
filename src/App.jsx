@@ -464,6 +464,8 @@ const PIN_CORRECTO = "1417"; // después lo cambiamos
   const { id } = useParams();
   const params = new URLSearchParams(window.location.search);
 const esVistaLista = params.get("vista") === "lista";
+const esVistaCheckin =
+  params.get("vista") === "checkin";
   const esCliente = !!id;
   const [pantallaInicio, setPantallaInicio] = useState(esCliente);
   // ---------------------------------------------------------
@@ -480,6 +482,8 @@ const [mesaActivaId, setMesaActivaId] = useState(null);
 const [busquedaInvitado, setBusquedaInvitado] = useState("");
 const [busquedaMesa, setBusquedaMesa] = useState("");
 const [resultadoMesa, setResultadoMesa] = useState(null);
+const [busquedaCheckin, setBusquedaCheckin] = useState("");
+const [filtroCheckin, setFiltroCheckin] = useState("todos");
 const [tagsInvitado, setTagsInvitado] = useState([]);
 const [invitadosBulk, setInvitadosBulk] = useState("");
 const [previewInvitados, setPreviewInvitados] = useState([]);
@@ -688,9 +692,11 @@ const calcularDias = (fecha) => {
 
     const nuevosInvitados = previewInvitados.map(inv => ({
       id: Math.floor(Math.random() * 1000000) + Date.now(),
-      nombre: inv.nombre,
-      mesaId: null,
-      tags: inv.tags || []
+nombre: inv.nombre,
+mesaId: null,
+tags: inv.tags || [],
+checkin: false,
+horaIngreso: null
     }));
 
     handleActualizarEvento({
@@ -714,9 +720,11 @@ const calcularDias = (fecha) => {
 
   const nuevosInvitados = lineas.map(nombre => ({
     id: Math.floor(Math.random() * 1000000) + Date.now(),
-    nombre: nombre.trim(),
-    mesaId: null,
-    tags: []
+nombre: nombre.trim(),
+mesaId: null,
+tags: [],
+checkin: false,
+horaIngreso: null
   }));
 
   handleActualizarEvento({
@@ -1458,6 +1466,280 @@ backdropFilter: "blur(6px)",
     </div>
   );
 }
+if (esVistaCheckin && eventoActual) {
+
+  const presentes =
+    eventoActual.invitados.filter(
+      i => i.checkin
+    ).length;
+
+  const faltan =
+    eventoActual.invitados.length - presentes;
+
+  return (
+
+    <div style={{
+      minHeight: "100vh",
+      background: "#f4f1ea",
+      padding: "20px"
+    }}>
+
+      <div style={{
+        maxWidth: "700px",
+        margin: "0 auto"
+      }}>
+
+        <h1 style={{
+          fontFamily: "Brittany Signature",
+          fontSize: "3rem",
+          textAlign: "center",
+          marginBottom: "10px"
+        }}>
+          Check-In
+        </h1>
+
+        <p style={{
+          textAlign: "center",
+          marginBottom: "30px"
+        }}>
+          {eventoActual.nombre}
+        </p>
+
+        <div style={{
+          display: "flex",
+          gap: "15px",
+          marginBottom: "20px"
+        }}>
+
+          <div style={{
+            flex: 1,
+            background: "#fff",
+            padding: "20px",
+            borderRadius: "20px",
+            textAlign: "center"
+          }}>
+            <div style={{fontSize:"2rem"}}>
+              ✔
+            </div>
+
+            <div>
+              PRESENTES
+            </div>
+
+            <strong>
+              {presentes}
+            </strong>
+          </div>
+
+          <div style={{
+            flex: 1,
+            background: "#fff",
+            padding: "20px",
+            borderRadius: "20px",
+            textAlign: "center"
+          }}>
+            <div style={{fontSize:"2rem"}}>
+              ⏳
+            </div>
+
+            <div>
+              FALTAN
+            </div>
+
+            <strong>
+              {faltan}
+            </strong>
+          </div>
+
+        </div>
+
+        <input
+          type="text"
+          placeholder="Buscar invitado..."
+          value={busquedaCheckin}
+          onChange={(e) =>
+            setBusquedaCheckin(e.target.value)
+          }
+          className="input-field"
+        />
+
+        <div style={{
+          display:"flex",
+          gap:"10px",
+          marginBottom:"20px"
+        }}>
+
+          <button
+            className="btn-luxury btn-outline"
+            onClick={() =>
+              setFiltroCheckin("todos")
+            }
+          >
+            Todos
+          </button>
+
+          <button
+            className="btn-luxury btn-outline"
+            onClick={() =>
+              setFiltroCheckin("presentes")
+            }
+          >
+            Presentes
+          </button>
+
+          <button
+            className="btn-luxury btn-outline"
+            onClick={() =>
+              setFiltroCheckin("faltan")
+            }
+          >
+            Faltan
+          </button>
+
+        </div>
+
+        {(eventoActual.invitados || [])
+
+          .filter(inv =>
+            inv.nombre
+              .toLowerCase()
+              .includes(
+                busquedaCheckin.toLowerCase()
+              )
+          )
+
+          .filter(inv => {
+
+            if (filtroCheckin === "presentes") {
+              return inv.checkin;
+            }
+
+            if (filtroCheckin === "faltan") {
+              return !inv.checkin;
+            }
+
+            return true;
+
+          })
+
+          .sort((a,b) =>
+            a.nombre.localeCompare(b.nombre)
+          )
+
+          .map(inv => {
+
+            const mesa =
+              eventoActual.mesas.find(
+                m => m.id === inv.mesaId
+              );
+
+            return (
+
+              <div
+                key={inv.id}
+                style={{
+                  background:"#fff",
+                  padding:"18px",
+                  borderRadius:"18px",
+                  marginBottom:"12px",
+                  border: inv.checkin
+                    ? "2px solid #6bbf59"
+                    : "1px solid #eee"
+                }}
+              >
+
+                <div style={{
+                  display:"flex",
+                  justifyContent:"space-between",
+                  alignItems:"center"
+                }}>
+
+                  <div>
+
+                    <div style={{
+                      fontWeight:600
+                    }}>
+                      {inv.checkin ? "🟢 " : ""}
+                      {inv.nombre}
+                    </div>
+
+                    <div style={{
+                      fontSize:"0.8rem",
+                      color:"#777"
+                    }}>
+                      {mesa
+                        ? `Mesa ${mesa.numero}`
+                        : "Sin mesa"}
+                    </div>
+
+                    {inv.horaIngreso && (
+                      <div style={{
+                        fontSize:"0.75rem",
+                        color:"#999"
+                      }}>
+                        Ingresó:
+                        {" "}
+                        {new Date(
+                          inv.horaIngreso
+                        ).toLocaleTimeString()}
+                      </div>
+                    )}
+
+                  </div>
+
+                  <button
+                    className="btn-luxury"
+                    style={{
+                      background: inv.checkin
+                        ? "#999"
+                        : "#c5a059"
+                    }}
+                    onClick={() => {
+
+                      const nuevosInvitados =
+                        eventoActual.invitados.map(i => {
+
+                          if (i.id !== inv.id) {
+                            return i;
+                          }
+
+                          return {
+                            ...i,
+                            checkin: !i.checkin,
+                            horaIngreso:
+                              !i.checkin
+                                ? Date.now()
+                                : null
+                          };
+
+                        });
+
+                      handleActualizarEvento({
+                        invitados: nuevosInvitados
+                      });
+
+                    }}
+                  >
+                    {inv.checkin
+                      ? "Desmarcar"
+                      : "Ingresó"}
+                  </button>
+
+                </div>
+
+              </div>
+
+            );
+
+          })}
+
+      </div>
+
+    </div>
+
+  );
+
+}
 if (esVistaLista && eventoActual) {
   return (
   <div style={{
@@ -1657,15 +1939,40 @@ if (esVistaLista && eventoActual) {
   </button>
 )}
 
-{eventoActual.cerrado && (
-  <p style={{
-    fontSize: '0.8rem',
-    color: 'var(--lb-gold)',
-    fontWeight: 600,
+{eventoActual.cerrado && !esCliente && (
+
+  <div style={{
     marginBottom: '20px'
   }}>
-    🔒 Evento cerrado
-  </p>
+
+    <p style={{
+      fontSize: '0.8rem',
+      color: 'var(--lb-gold)',
+      fontWeight: 600,
+      marginBottom: '15px'
+    }}>
+      🔒 Evento cerrado
+    </p>
+
+    <button
+      className="btn-luxury"
+      style={{
+        width: "100%"
+      }}
+      onClick={() => {
+
+        window.open(
+          `/evento/${eventoActual.id}?vista=checkin`,
+          "_blank"
+        );
+
+      }}
+    >
+      ✔ Abrir recepción
+    </button>
+
+  </div>
+
 )}
 
         <div className="bulk-box">
@@ -2235,7 +2542,10 @@ const invitado = eventoActual.invitados.find(inv =>
       borderRadius: "8px",
       border: "1px solid #ccc",
       background: "#fff",
-      cursor: "pointer"
+      cursor: "pointer",
+      opacity: estaBloqueado ? 0.5 : 1,
+pointerEvents: estaBloqueado ? "none" : "auto",
+      
     }}
   >
     Ubicar invitados...
@@ -2297,6 +2607,7 @@ const invitado = eventoActual.invitados.find(inv =>
           <label key={inv.id} style={{ display: "block" }}>
             <input
               type="checkbox"
+              disabled={estaBloqueado}
               checked={invitadosTemp.includes(inv.id)}
               onChange={(e) => {
                 if (e.target.checked) {
@@ -2311,6 +2622,7 @@ const invitado = eventoActual.invitados.find(inv =>
         ))}
 
       <button
+      disabled={estaBloqueado}
         onClick={() => {
          // 🔥 actualizar mesas
 const nuevasMesas = eventoActual.mesas.map(m =>
