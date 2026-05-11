@@ -1970,6 +1970,32 @@ if (esVistaLista && eventoActual) {
     >
       ✔ Abrir recepción
     </button>
+    <button
+  className="btn-luxury"
+  style={{
+    width: "100%",
+    marginTop: "10px",
+    background: "#1a1a1a"
+  }}
+  onClick={() => {
+
+    const link =
+      window.location.origin +
+      "/evento/" +
+      eventoActual.id +
+      "?vista=checkin";
+
+    navigator.clipboard.writeText(link);
+
+    alert(
+      "🔗 Link de recepción copiado:\n\n" +
+      link
+    );
+
+  }}
+>
+  📲 Compartir recepción
+</button>
 
   </div>
 
@@ -2474,7 +2500,9 @@ onChange={(e) => setInvitadosBulk(e.target.value)}
   >
     📋 Compartir lista
   </button>
+  
 )}
+
             <p style={{color: 'var(--lb-gray-mid)'}}>Asigna tus invitados a las mesas del salón</p>
           </div>
           <div style={{
