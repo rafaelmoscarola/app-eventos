@@ -14,7 +14,8 @@
 } from "firebase/firestore";
 import { descargarMensajesPDF } from "./qrUtils";
 import { jsPDF } from 'jspdf';
-import { db } from "./firebase";
+import { db, auth } from "./firebase";
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
 import { Routes, Route, useParams } from "react-router-dom";
 import MensajesEvento from "./MensajesEvento";
 import PropuestaCliente from "./PropuestaCliente";
@@ -463,9 +464,18 @@ const AppContent = () => {
 const [pantallaPublica, setPantallaPublica] = useState(true);
 const [fadeOut, setFadeOut] = useState(false);
 const [logueado, setLogueado] = useState(false);
+const [loginEmail, setLoginEmail] = useState("");
+const [loginPassword, setLoginPassword] = useState("");
+const [loginError, setLoginError] = useState("");
+const [loginCargando, setLoginCargando] = useState(false);
 
-const [pinInput, setPinInput] = useState("");
-const PIN_CORRECTO = "1417"; // después lo cambiamos
+// Escucha el estado real de autenticación de Firebase
+useEffect(() => {
+  const unsub = onAuthStateChanged(auth, (user) => {
+    setLogueado(!!user);
+  });
+  return () => unsub();
+}, []);
 
   const { id } = useParams();
   const params = new URLSearchParams(window.location.search);
@@ -3086,54 +3096,104 @@ if (condiciones) {
       minHeight: "100vh",
       display: "flex",
       justifyContent: "center",
-      alignItems: "flex-start",
-      background: "#f4f1ea"
+      alignItems: "center",
+      background: "linear-gradient(160deg, #fdfcfb 0%, #f4ede0 100%)"
     }}>
-
       <div style={{
+        background: "#fff",
+        borderRadius: "24px",
+        padding: "52px 44px",
+        boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
+        width: "100%",
+        maxWidth: "400px",
         textAlign: "center"
       }}>
+        <div style={{
+          width: 64, height: 64, borderRadius: "50%",
+          background: "linear-gradient(135deg, #c5a059, #e8cfa0)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          margin: "0 auto 20px",
+          fontSize: "1.4rem", fontWeight: 800, color: "#fff", letterSpacing: 1
+        }}>LB</div>
 
-        <h2>INGRESE PIN</h2>
+        <h2 style={{
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontSize: "1.1rem", fontWeight: 700,
+          color: "#1a1a1a", letterSpacing: "2px",
+          textTransform: "uppercase", marginBottom: 6
+        }}>Luisina Bagnaroli</h2>
+        <p style={{ color: "#8e8e8e", fontSize: "0.82rem", marginBottom: 36 }}>
+          Diseño de Eventos — Panel de administración
+        </p>
 
         <input
-          type="password"
-          maxLength={4}
-          value={pinInput}
-          onChange={(e) => setPinInput(e.target.value)}
+          type="email"
+          placeholder="Email"
+          value={loginEmail}
+          onChange={(e) => { setLoginEmail(e.target.value); setLoginError(""); }}
+          onKeyDown={(e) => e.key === "Enter" && document.getElementById("btn-login-lb").click()}
           style={{
-            fontSize: "2rem",
-            textAlign: "center",
-            letterSpacing: "10px"
+            width: "100%", padding: "13px 16px", borderRadius: "12px",
+            border: "1.5px solid #e8e0d4", fontSize: "0.95rem",
+            outline: "none", marginBottom: 12,
+            background: "#fdfcfb", color: "#1a1a1a"
           }}
         />
 
-        <br /><br />
+        <input
+          type="password"
+          placeholder="Contraseña"
+          value={loginPassword}
+          onChange={(e) => { setLoginPassword(e.target.value); setLoginError(""); }}
+          onKeyDown={(e) => e.key === "Enter" && document.getElementById("btn-login-lb").click()}
+          style={{
+            width: "100%", padding: "13px 16px", borderRadius: "12px",
+            border: "1.5px solid #e8e0d4", fontSize: "0.95rem",
+            outline: "none", marginBottom: 8,
+            background: "#fdfcfb", color: "#1a1a1a"
+          }}
+        />
+
+        {loginError && (
+          <p style={{ color: "#c0392b", fontSize: "0.82rem", marginBottom: 12 }}>
+            {loginError}
+          </p>
+        )}
 
         <button
-  onClick={() => {
-    if (pinInput === PIN_CORRECTO) {
-      setLogueado(true);
-    } else {
-      alert("PIN incorrecto");
-    }
-  }}
-  style={{
-    padding: "14px 30px",
-    borderRadius: "30px",
-    background: "linear-gradient(145deg, #c9a86a, #b3935c)",
-    border: "none",
-    color: "#fff",
-    fontWeight: "600",
-    letterSpacing: "1px",
-    cursor: "pointer",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.4)",
-    transition: "0.3s"
-  }}
->
-  ✨ INGRESAR
-</button>
-
+          id="btn-login-lb"
+          disabled={loginCargando}
+          onClick={async () => {
+            if (!loginEmail || !loginPassword) {
+              setLoginError("Completá email y contraseña.");
+              return;
+            }
+            setLoginCargando(true);
+            setLoginError("");
+            try {
+              await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+            } catch (err) {
+              setLoginError("Email o contraseña incorrectos.");
+            } finally {
+              setLoginCargando(false);
+            }
+          }}
+          style={{
+            width: "100%", padding: "14px",
+            borderRadius: "30px", border: "none",
+            background: loginCargando
+              ? "#d4b97a"
+              : "linear-gradient(145deg, #c9a86a, #b3935c)",
+            color: "#fff", fontWeight: 700,
+            fontSize: "0.9rem", letterSpacing: "1.5px",
+            textTransform: "uppercase",
+            cursor: loginCargando ? "not-allowed" : "pointer",
+            boxShadow: "0 10px 30px rgba(197,160,89,0.3)",
+            transition: "0.3s", marginTop: 4
+          }}
+        >
+          {loginCargando ? "Ingresando..." : "✨ Ingresar"}
+        </button>
       </div>
     </div>
   );
@@ -3183,6 +3243,29 @@ if (condiciones) {
   }
 >
   ✨ Crear propuesta
+</button>
+
+<button
+  onClick={() => signOut(auth)}
+  style={{
+    width: "100%",
+    marginTop: "15px",
+    padding: "12px",
+    borderRadius: "30px",
+    border: "1.5px solid rgba(197,160,89,0.3)",
+    background: "transparent",
+    color: "#8e8e8e",
+    fontSize: "0.78rem",
+    fontWeight: 600,
+    letterSpacing: "1.5px",
+    textTransform: "uppercase",
+    cursor: "pointer",
+    transition: "0.3s"
+  }}
+  onMouseOver={(e) => e.target.style.color = "#c5a059"}
+  onMouseOut={(e) => e.target.style.color = "#8e8e8e"}
+>
+  Cerrar sesión
 </button>
   </div>
 </aside>
