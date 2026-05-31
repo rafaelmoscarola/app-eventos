@@ -145,41 +145,8 @@ const injectStyles = () => {
 }
 
     /* DASHBOARD / HOME */
-    .hero-banner {
-  height: 400px;
-  background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://i.ibb.co/sd3B2NfM/Chat-GPT-Image-1-may-2026-07-21-43.png');
-  background-size: cover;
-  background-position: center;
-  padding: 80px;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-}
-  @media (max-width: 768px) {
-  .hero-banner {
-    margin-left: -20px;
-    margin-right: -20px;
-    width: calc(100% + 40px);
-    padding: 20px;
-    height: 220px;
-  }
-}
-
-/* MOBILE */
-@media (max-width: 768px) {
-  .hero-banner {
-    height: 220px;
-    padding: 20px;
-  }
-}
-
-    .hero-text { font-family: 'Playfair Display', serif; font-size: 4rem; margin-bottom: 10px; }
-    @media (max-width: 768px) {
-  .hero-text {
-    font-size: 1.8rem;
-  }
-}
+    .hero-banner { display: none; }
+    .hero-text { display: none; }
 
     .projects-section { padding: 60px; }
     .grid-container { 
@@ -477,6 +444,23 @@ useEffect(() => {
   return () => unsub();
 }, []);
 
+// Cierre automático de sesión por inactividad (30 minutos)
+useEffect(() => {
+  const TIEMPO_LIMITE = 30 * 60 * 1000;
+  let timer;
+  const reiniciarTimer = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { signOut(auth); }, TIEMPO_LIMITE);
+  };
+  const eventos = ["mousemove", "keydown", "click", "scroll", "touchstart"];
+  eventos.forEach(ev => window.addEventListener(ev, reiniciarTimer));
+  reiniciarTimer();
+  return () => {
+    clearTimeout(timer);
+    eventos.forEach(ev => window.removeEventListener(ev, reiniciarTimer));
+  };
+}, []);
+
   const { id } = useParams();
   const params = new URLSearchParams(window.location.search);
 const esVistaLista = params.get("vista") === "lista";
@@ -528,6 +512,8 @@ const [editandoInvitado, setEditandoInvitado] = useState(null);
 const [nombreEditado, setNombreEditado] = useState("");
 const textareaRef = useRef(null);
 const [mostrarPropuesta, setMostrarPropuesta] = useState(false);
+const [mostrarFormEvento, setMostrarFormEvento] = useState(false);
+const [mostrarEventos, setMostrarEventos] = useState(false);
 const [editandoPropuestaId, setEditandoPropuestaId] = useState(null);
 
 const [tipoPropuesta, setTipoPropuesta] = useState("boda");
@@ -3207,30 +3193,37 @@ if (condiciones) {
 
   <div style={{marginTop: 'auto'}}>
 
+   <button
+  className="btn-luxury"
+  style={{width: '100%'}}
+  onClick={() => setMostrarFormEvento(prev => !prev)}
+>
+  + Crear Evento
+</button>
+
+{mostrarFormEvento && (
+  <div style={{marginTop: '12px'}}>
     <input
       className="input-field"
       placeholder="Nombre del evento"
       value={nuevoNombre}
       onChange={(e) => setNuevoNombre(e.target.value)}
     />
-
     <input
       type="date"
       className="input-field"
       value={nuevaFecha}
       onChange={(e) => setNuevaFecha(e.target.value)}
     />
-
-   <button 
-  className="btn-luxury" 
-  style={{width: '100%'}} 
-  onClick={() => {
-    console.log("CLICK OK");
-    handleCrearProyecto();
-  }}
->
-  + Crear Evento
-</button>
+    <button
+      className="btn-luxury"
+      style={{width: '100%', marginTop: '8px'}}
+      onClick={() => { handleCrearProyecto(); setMostrarFormEvento(false); }}
+    >
+      ✓ Confirmar
+    </button>
+  </div>
+)}
 <button
   className="btn-luxury"
   style={{
@@ -3271,10 +3264,7 @@ if (condiciones) {
 </aside>
 
         <main className="main-wrapper">
-          <header className="hero-banner">
-            <h2 className="hero-text">Gestión de Espacios</h2>
-            <p style={{fontSize: '1.2rem', fontWeight: 200}}>Visualiza y organiza tus eventos</p>
-          </header>
+
 
           <section className="projects-section">
             {resenasPublicas.length > 0 && (
@@ -4097,6 +4087,41 @@ if (condiciones) {
   </div>
 
 )}
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "15px",
+              flexWrap: "wrap",
+              background: "#fff",
+              padding: "22px 25px",
+              borderRadius: "22px",
+              boxShadow: "0 10px 35px rgba(0,0,0,0.05)",
+              marginBottom: mostrarEventos ? "25px" : "0"
+            }}>
+              <div>
+                <h2 style={{
+                  fontFamily: "Playfair Display",
+                  marginBottom: "4px",
+                  fontSize: "1.8rem"
+                }}>
+                  Eventos creados
+                </h2>
+                <div style={{ color: "#777", fontSize: "0.9rem" }}>
+                  {eventos.length} {eventos.length === 1 ? "evento guardado" : "eventos guardados"}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn-luxury btn-outline"
+                style={{ minWidth: "210px" }}
+                onClick={() => setMostrarEventos(prev => !prev)}
+              >
+                {mostrarEventos ? "Ocultar eventos" : "Ver eventos"}
+              </button>
+            </div>
+
+            {mostrarEventos && (
             <div className="grid-container">
              {[...eventos]
   .sort((a, b) => {
@@ -4112,7 +4137,7 @@ if (condiciones) {
     flexDirection: 'column'
   }}
 >
-                  <img src={e.img} className="card-image" alt="Wedding" />
+
                   <div className="card-content">
                     <h3 className="card-title">{e.nombre}</h3>
                     {e.cerrado && (
@@ -4225,6 +4250,7 @@ if (condiciones) {
                 </div>
               )}
             </div>
+            )}
           </section>
         </main>
       </div>
