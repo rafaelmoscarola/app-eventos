@@ -3210,6 +3210,43 @@ background:"#111",
 
     ))}
 
+    {esEmpresas && (
+      <div
+        className="propuesta-tech-card"
+        style={{
+          borderColor: `rgba(197,160,89,0.5)`,
+          boxShadow: "0 18px 45px rgba(0,0,0,0.22)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer"
+        }}
+        onClick={descargarPropuestaPDF}
+      >
+        <div style={{ fontSize: "1.55rem", marginBottom: "18px" }}>📄</div>
+        <div style={{
+          fontSize: "0.68rem",
+          letterSpacing: "2px",
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,0.48)",
+          marginBottom: "10px",
+          fontWeight: 700
+        }}>
+          Descargar
+        </div>
+        <strong style={{
+          display: "block",
+          fontSize: "1rem",
+          lineHeight: 1.25,
+          color: `rgba(197,160,89,1)`,
+          textAlign: "center"
+        }}>
+          Propuesta en PDF
+        </strong>
+      </div>
+    )}
+
   </div>
 
   <div className="propuesta-text-cards-grid" style={{
@@ -3269,67 +3306,6 @@ background:"#111",
   </div>
 
 </div>
-
-{esEmpresas && (
-  <div
-    className="reveal-propuesta"
-    style={{
-      textAlign: "center",
-      margin: "50px 0 80px"
-    }}
-  >
-    <div style={{
-      marginBottom: "18px",
-      fontSize: "0.82rem",
-      letterSpacing: "2px",
-      color: "rgba(255,255,255,0.52)",
-      textTransform: "uppercase"
-    }}>
-      Para presentar a comisión directiva o quienes deciden
-    </div>
-
-    <button
-      type="button"
-      onClick={descargarPropuestaPDF}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "10px",
-        padding: "18px 38px",
-        borderRadius: "999px",
-        border: "1.5px solid rgba(197,160,89,0.7)",
-        background: "linear-gradient(135deg, #c5a059 0%, #e8cfa0 50%, #a3844a 100%)",
-        color: "#111",
-        fontWeight: 800,
-        fontSize: "0.82rem",
-        letterSpacing: "2px",
-        textTransform: "uppercase",
-        cursor: "pointer",
-        boxShadow: "0 18px 50px rgba(197,160,89,0.25)",
-        transition: "all 0.3s ease"
-      }}
-      onMouseOver={e => {
-        e.currentTarget.style.transform = "translateY(-2px)";
-        e.currentTarget.style.boxShadow = "0 26px 60px rgba(197,160,89,0.38)";
-      }}
-      onMouseOut={e => {
-        e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.boxShadow = "0 18px 50px rgba(197,160,89,0.25)";
-      }}
-    >
-      <span style={{ fontSize: "1.15rem" }}>📄</span>
-      Descargar propuesta en PDF
-    </button>
-
-    <div style={{
-      marginTop: "12px",
-      fontSize: "0.74rem",
-      color: "rgba(255,255,255,0.36)"
-    }}>
-      Incluye todos los datos, costos y detalles del servicio
-    </div>
-  </div>
-)}
 
         <p style={{
           fontSize:"1.2rem",
