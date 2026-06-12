@@ -549,6 +549,7 @@ const [monedaRecibo, setMonedaRecibo] = useState("ARS");
 const [cotizacionRecibo, setCotizacionRecibo] = useState("");
 const [medioPagoRecibo, setMedioPagoRecibo] = useState("efectivo");
 const [observacionRecibo, setObservacionRecibo] = useState("");
+const [fechaRecibo, setFechaRecibo] = useState(() => new Date().toISOString().slice(0, 10));
 const [historialRecibosPropuestaId, setHistorialRecibosPropuestaId] = useState(null);
 const [resenasPublicas, setResenasPublicas] = useState([]);
 const [mostrarResenasAdmin, setMostrarResenasAdmin] = useState(false);
@@ -1501,6 +1502,7 @@ const limpiarFormularioRecibo = () => {
   setCotizacionRecibo("");
   setMedioPagoRecibo("efectivo");
   setObservacionRecibo("");
+  setFechaRecibo(new Date().toISOString().slice(0, 10));
 };
 
 const abrirPanelRecibos = (prop) => {
@@ -1522,6 +1524,7 @@ const handleEditarRecibo = (recibo) => {
   setCotizacionRecibo(String(recibo.cotizacion || ""));
   setMedioPagoRecibo(recibo.medioPago || "efectivo");
   setObservacionRecibo(recibo.observacion || "");
+  setFechaRecibo(recibo.fechaEntrega || new Date().toISOString().slice(0, 10));
 };
 
 const handleGuardarRecibo = async (prop) => {
@@ -1556,7 +1559,8 @@ const handleGuardarRecibo = async (prop) => {
     importeEntrega: importe,
     cotizacion: requiereCotizacion ? cotizacion : "",
     medioPago: medioPagoRecibo,
-    observacion: observacionRecibo
+    observacion: observacionRecibo,
+    fechaEntrega: fechaRecibo || new Date().toISOString().slice(0, 10)
   };
 
   const nuevosRecibos = recibosActuales.some(item => item.id === idRecibo)
@@ -3885,6 +3889,14 @@ if (condiciones) {
           <strong style={{color:"#9a6a1f"}}>{formatearDineroRecibo(resumenRecibos.saldo, resumenRecibos.monedaPresupuesto)}</strong>
         </div>
       </div>
+
+      <input
+        className="input-field"
+        type="date"
+        value={fechaRecibo}
+        onChange={(e) => setFechaRecibo(e.target.value)}
+        style={{marginBottom:"10px"}}
+      />
 
       <input
         className="input-field"
