@@ -107,7 +107,11 @@ const generarPdfRecibo = ({ propuesta, recibo }) => {
   pdf.setFontSize(12);
   pdf.setTextColor(40, 40, 40);
 
-  const textoPrincipal = "Recibí de " + (propuesta.cliente || "cliente") + " la suma de " + formatoMoneda(recibo.importeEntrega, recibo.monedaEntrega) + " en concepto de entrega a cuenta para el diseño y ejecución de la organización y deco del evento a realizarse el día " + formatoFecha(propuesta.fecha) + ".";
+  const nombreEnRecibo = recibo.nombrePagador && recibo.nombrePagador.trim() !== ""
+    ? recibo.nombrePagador.trim()
+    : (propuesta.cliente || "cliente");
+
+  const textoPrincipal = "Recibí de " + nombreEnRecibo + " la suma de " + formatoMoneda(recibo.importeEntrega, recibo.monedaEntrega) + " en concepto de entrega a cuenta para el diseño y ejecución de la organización y deco del evento a realizarse el día " + formatoFecha(propuesta.fecha) + ".";
   const lineas = pdf.splitTextToSize(textoPrincipal, ancho - margen * 2);
   pdf.text(lineas, margen, y);
   y += lineas.length * 7 + 8;

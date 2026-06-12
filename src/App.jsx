@@ -550,6 +550,7 @@ const [cotizacionRecibo, setCotizacionRecibo] = useState("");
 const [medioPagoRecibo, setMedioPagoRecibo] = useState("efectivo");
 const [observacionRecibo, setObservacionRecibo] = useState("");
 const [fechaRecibo, setFechaRecibo] = useState(() => new Date().toISOString().slice(0, 10));
+const [nombrePagadorRecibo, setNombrePagadorRecibo] = useState("");
 const [historialRecibosPropuestaId, setHistorialRecibosPropuestaId] = useState(null);
 const [resenasPublicas, setResenasPublicas] = useState([]);
 const [mostrarResenasAdmin, setMostrarResenasAdmin] = useState(false);
@@ -1503,6 +1504,7 @@ const limpiarFormularioRecibo = () => {
   setMedioPagoRecibo("efectivo");
   setObservacionRecibo("");
   setFechaRecibo(new Date().toISOString().slice(0, 10));
+  setNombrePagadorRecibo("");
 };
 
 const abrirPanelRecibos = (prop) => {
@@ -1525,6 +1527,7 @@ const handleEditarRecibo = (recibo) => {
   setMedioPagoRecibo(recibo.medioPago || "efectivo");
   setObservacionRecibo(recibo.observacion || "");
   setFechaRecibo(recibo.fechaEntrega || new Date().toISOString().slice(0, 10));
+  setNombrePagadorRecibo(recibo.nombrePagador || "");
 };
 
 const handleGuardarRecibo = async (prop) => {
@@ -1560,7 +1563,8 @@ const handleGuardarRecibo = async (prop) => {
     cotizacion: requiereCotizacion ? cotizacion : "",
     medioPago: medioPagoRecibo,
     observacion: observacionRecibo,
-    fechaEntrega: fechaRecibo || new Date().toISOString().slice(0, 10)
+    fechaEntrega: fechaRecibo || new Date().toISOString().slice(0, 10),
+    nombrePagador: nombrePagadorRecibo.trim()
   };
 
   const nuevosRecibos = recibosActuales.some(item => item.id === idRecibo)
@@ -3896,6 +3900,13 @@ if (condiciones) {
         value={fechaRecibo}
         onChange={(e) => setFechaRecibo(e.target.value)}
         style={{marginBottom:"10px"}}
+      />
+
+      <input
+        className="input-field"
+        placeholder="Nombre de quien realiza el pago"
+        value={nombrePagadorRecibo}
+        onChange={(e) => setNombrePagadorRecibo(e.target.value)}
       />
 
       <input
