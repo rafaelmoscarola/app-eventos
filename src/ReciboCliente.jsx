@@ -171,7 +171,7 @@ const generarPdfRecibo = ({ propuesta, recibo }) => {
     }
 
     const estado = item.estado === "anulado" ? "Anulado" : "Activo";
-    const cotizacionTexto = item.monedaEntrega === "USD" && item.cotizacion
+    const cotizacionTexto = item.cotizacion
       ? "$" + Number(item.cotizacion).toLocaleString("es-AR")
       : "-";
 
