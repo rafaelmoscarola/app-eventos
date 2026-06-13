@@ -1560,7 +1560,7 @@ const handleGuardarRecibo = async (prop) => {
     importePresupuesto: numeroDesdeTextoRecibo(prop.presupuesto || prop.importe || prop.importePropuesta),
     monedaEntrega: monedaRecibo,
     importeEntrega: importe,
-    cotizacion: requiereCotizacion ? cotizacion : "",
+    cotizacion: cotizacion || "",
     medioPago: medioPagoRecibo,
     observacion: observacionRecibo,
     fechaEntrega: fechaRecibo || new Date().toISOString().slice(0, 10),
@@ -3942,14 +3942,12 @@ if (condiciones) {
         </select>
       </div>
 
-      {requiereCotizacion && (
-        <input
-          className="input-field"
-          placeholder="Cotización tomada para convertir"
-          value={cotizacionRecibo}
-          onChange={(e) => setCotizacionRecibo(e.target.value)}
-        />
-      )}
+      <input
+        className="input-field"
+        placeholder="Valor del dólar tomado (cotización)"
+        value={cotizacionRecibo}
+        onChange={(e) => setCotizacionRecibo(e.target.value)}
+      />
 
       <textarea
         className="input-field"
