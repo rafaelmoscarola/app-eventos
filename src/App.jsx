@@ -4020,7 +4020,7 @@ if (condiciones) {
                 {formatearDineroRecibo(recibo.importeEntrega, recibo.monedaEntrega)}
               </div>
               <div style={{fontSize:"0.75rem", color:"#777", marginTop:"3px"}}>
-                {formatearFechaRecibo(recibo.creada)} · {recibo.medioPago || "Sin medio"} · aplicado {formatearDineroRecibo(recibo.aplicadoPresupuesto, resumenRecibos.monedaPresupuesto)}
+                {recibo.fechaEntrega ? new Date(recibo.fechaEntrega + "T00:00:00").toLocaleDateString("es-AR") : formatearFechaRecibo(recibo.creada)} · {recibo.medioPago || "Sin medio"} · aplicado {formatearDineroRecibo(recibo.aplicadoPresupuesto, resumenRecibos.monedaPresupuesto)}
               </div>
               <div style={{fontSize:"0.75rem", color:"#777", marginTop:"3px"}}>
                 Saldo posterior: {formatearDineroRecibo(recibo.saldoPosterior, resumenRecibos.monedaPresupuesto)}
