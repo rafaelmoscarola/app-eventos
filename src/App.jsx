@@ -3895,6 +3895,7 @@ if (condiciones) {
       </div>
 
       <input
+        id={"formulario-recibo-" + prop._docId}
         className="input-field"
         type="date"
         value={fechaRecibo}
@@ -4046,9 +4047,15 @@ if (condiciones) {
                     type="button"
                     className="btn-luxury btn-outline"
                     style={{padding:"8px 10px", fontSize:"0.65rem"}}
-                    onClick={() => handleEditarRecibo(recibo)}
+                    onClick={() => {
+                      handleEditarRecibo(recibo);
+                      setHistorialRecibosPropuestaId(null);
+                      setTimeout(() => {
+                        document.getElementById("formulario-recibo-" + prop._docId)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      }, 100);
+                    }}
                   >
-                    Editar
+                    ✏️ Editar
                   </button>
                 )}
 
