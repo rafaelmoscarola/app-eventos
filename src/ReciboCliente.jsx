@@ -151,8 +151,8 @@ const generarPdfRecibo = ({ propuesta, recibo }) => {
   pdf.text("Detalle de entregas", margen, y);
   y += 10;
 
-  const headers = ["Fecha", "Entrega", "Aplicado", "Saldo", "Estado"];
-  const widths = [32, 42, 42, 42, 24];
+  const headers = ["Fecha", "Entrega", "Cotiz. USD", "Aplicado", "Saldo", "Estado"];
+  const widths = [28, 36, 28, 36, 36, 20];
   let x = margen;
 
   pdf.setFontSize(8);
@@ -171,9 +171,14 @@ const generarPdfRecibo = ({ propuesta, recibo }) => {
     }
 
     const estado = item.estado === "anulado" ? "Anulado" : "Activo";
+    const cotizacionTexto = item.monedaEntrega === "USD" && item.cotizacion
+      ? "$" + Number(item.cotizacion).toLocaleString("es-AR")
+      : "-";
+
     const fila = [
-      formatoFecha(item.creada),
+      item.fechaEntrega ? new Date(item.fechaEntrega + "T00:00:00").toLocaleDateString("es-AR") : formatoFecha(item.creada),
       formatoMoneda(item.importeEntrega, item.monedaEntrega),
+      cotizacionTexto,
       formatoMoneda(item.aplicadoPresupuesto, monedaPresupuesto),
       formatoMoneda(item.saldoPosterior, monedaPresupuesto),
       estado

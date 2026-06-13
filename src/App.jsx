@@ -4049,6 +4049,7 @@ if (condiciones) {
                     style={{padding:"8px 10px", fontSize:"0.65rem"}}
                     onClick={() => {
                       handleEditarRecibo(recibo);
+                      setReciboPropuestaId(prop._docId);
                       setHistorialRecibosPropuestaId(null);
                       setTimeout(() => {
                         document.getElementById("formulario-recibo-" + prop._docId)?.scrollIntoView({ behavior: "smooth", block: "center" });
