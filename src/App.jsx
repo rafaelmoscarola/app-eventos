@@ -420,6 +420,333 @@ const injectStyles = () => {
 
 injectStyles();
 
+// ── COMPONENTE GALERÍA INICIO ─────────────────────────────────────────────
+const GaleriaInicio = ({ categorias, todasLasImagenes }) => {
+  const [categoriaActiva, setCategoriaActiva] = React.useState(null);
+  const [lightbox, setLightbox] = React.useState(null); // { imagenes, indice }
+  const [carruselIdx, setCarruselIdx] = React.useState(0);
+  const carruselRef = React.useRef(null);
+
+  // Carrusel automático
+  React.useEffect(() => {
+    const intervalo = setInterval(() => {
+      setCarruselIdx(i => (i + 1) % todasLasImagenes.length);
+    }, 2800);
+    return () => clearInterval(intervalo);
+  }, [todasLasImagenes.length]);
+
+  // Teclado para lightbox
+  React.useEffect(() => {
+    if (!lightbox) return;
+    const handler = (e) => {
+      if (e.key === "ArrowRight") setLightbox(l => ({ ...l, indice: (l.indice + 1) % l.imagenes.length }));
+      if (e.key === "ArrowLeft") setLightbox(l => ({ ...l, indice: (l.indice - 1 + l.imagenes.length) % l.imagenes.length }));
+      if (e.key === "Escape") setLightbox(null);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [lightbox]);
+
+  const imagenesMostradas = categoriaActiva
+    ? categorias.find(c => c.id === categoriaActiva)?.imagenes || []
+    : [];
+
+  return (
+    <div style={{ margin: "0 auto 80px", maxWidth: "1180px" }}>
+
+      {/* Título sección */}
+      <div style={{ textAlign: "center", marginBottom: "42px" }}>
+        <div style={{
+          fontSize: "0.78rem",
+          letterSpacing: "4px",
+          textTransform: "uppercase",
+          color: "#d7b46a",
+          marginBottom: "14px",
+          fontWeight: 700
+        }}>
+          Nuestro trabajo
+        </div>
+        <h2 style={{
+          fontSize: "clamp(2rem, 4.5vw, 3.2rem)",
+          fontFamily: "Brittany Signature, cursive",
+          color: "#fff",
+          margin: 0,
+          lineHeight: 1.1
+        }}>
+          Cada celebración tiene su propia magia
+        </h2>
+      </div>
+
+      {/* Carrusel automático */}
+      <div style={{
+        overflow: "hidden",
+        borderRadius: "28px",
+        marginBottom: "38px",
+        position: "relative",
+        height: "clamp(200px, 36vw, 420px)",
+        background: "#111"
+      }}>
+        {todasLasImagenes.map((img, i) => (
+          <div
+            key={img}
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage: `url(${img})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              opacity: i === carruselIdx ? 1 : 0,
+              transition: "opacity 1s ease",
+              borderRadius: "28px"
+            }}
+          />
+        ))}
+        {/* Indicadores */}
+        <div style={{
+          position: "absolute",
+          bottom: "16px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          display: "flex",
+          gap: "6px",
+          zIndex: 2
+        }}>
+          {todasLasImagenes.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setCarruselIdx(i)}
+              style={{
+                width: i === carruselIdx ? "22px" : "7px",
+                height: "7px",
+                borderRadius: "999px",
+                background: i === carruselIdx ? "#d7b46a" : "rgba(255,255,255,0.4)",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+                transition: "all 0.35s ease"
+              }}
+            />
+          ))}
+        </div>
+        {/* Flechas */}
+        {["◀", "▶"].map((arrow, dir) => (
+          <button
+            key={dir}
+            type="button"
+            onClick={() => setCarruselIdx(i =>
+              dir === 0
+                ? (i - 1 + todasLasImagenes.length) % todasLasImagenes.length
+                : (i + 1) % todasLasImagenes.length
+            )}
+            style={{
+              position: "absolute",
+              top: "50%",
+              [dir === 0 ? "left" : "right"]: "16px",
+              transform: "translateY(-50%)",
+              background: "rgba(0,0,0,0.45)",
+              border: "none",
+              borderRadius: "999px",
+              width: "38px",
+              height: "38px",
+              color: "#fff",
+              fontSize: "0.9rem",
+              cursor: "pointer",
+              zIndex: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
+            {arrow}
+          </button>
+        ))}
+      </div>
+
+      {/* Tabs de categoría */}
+      <div style={{
+        display: "flex",
+        gap: "10px",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        marginBottom: "28px"
+      }}>
+        {categorias.map(cat => (
+          <button
+            key={cat.id}
+            type="button"
+            onClick={() => setCategoriaActiva(categoriaActiva === cat.id ? null : cat.id)}
+            style={{
+              padding: "10px 22px",
+              borderRadius: "999px",
+              border: categoriaActiva === cat.id
+                ? "1.5px solid #d7b46a"
+                : "1.5px solid rgba(255,255,255,0.18)",
+              background: categoriaActiva === cat.id
+                ? "linear-gradient(135deg, #d7b46a, #b8924a)"
+                : "rgba(255,255,255,0.05)",
+              color: categoriaActiva === cat.id ? "#111" : "rgba(255,255,255,0.8)",
+              fontWeight: categoriaActiva === cat.id ? 700 : 500,
+              fontSize: "0.82rem",
+              letterSpacing: "1px",
+              cursor: "pointer",
+              transition: "all 0.25s ease",
+              display: "flex",
+              alignItems: "center",
+              gap: "7px"
+            }}
+          >
+            <span>{cat.emoji}</span>
+            {cat.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Grid de imágenes de la categoría seleccionada */}
+      {categoriaActiva && (
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+          gap: "12px",
+          animation: "fadeIn 0.35s ease"
+        }}>
+          {imagenesMostradas.map((img, i) => (
+            <div
+              key={img}
+              onClick={() => setLightbox({ imagenes: imagenesMostradas, indice: i })}
+              style={{
+                aspectRatio: "4/3",
+                backgroundImage: `url(${img})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                borderRadius: "16px",
+                cursor: "zoom-in",
+                transition: "transform 0.22s ease, box-shadow 0.22s ease",
+                boxShadow: "0 4px 18px rgba(0,0,0,0.28)"
+              }}
+              onMouseOver={e => {
+                e.currentTarget.style.transform = "scale(1.03)";
+                e.currentTarget.style.boxShadow = "0 10px 32px rgba(0,0,0,0.42)";
+              }}
+              onMouseOut={e => {
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.boxShadow = "0 4px 18px rgba(0,0,0,0.28)";
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div
+          onClick={() => setLightbox(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.92)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}
+        >
+          {/* Imagen */}
+          <img
+            src={lightbox.imagenes[lightbox.indice]}
+            alt=""
+            onClick={e => e.stopPropagation()}
+            style={{
+              maxWidth: "90vw",
+              maxHeight: "88vh",
+              borderRadius: "18px",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.7)",
+              objectFit: "contain"
+            }}
+          />
+
+          {/* Cerrar */}
+          <button
+            type="button"
+            onClick={() => setLightbox(null)}
+            style={{
+              position: "fixed",
+              top: "20px",
+              right: "24px",
+              background: "rgba(255,255,255,0.12)",
+              border: "none",
+              color: "#fff",
+              fontSize: "1.5rem",
+              width: "44px",
+              height: "44px",
+              borderRadius: "999px",
+              cursor: "pointer",
+              zIndex: 10000
+            }}
+          >
+            ✕
+          </button>
+
+          {/* Flechas */}
+          {["◀", "▶"].map((arrow, dir) => (
+            <button
+              key={dir}
+              type="button"
+              onClick={e => {
+                e.stopPropagation();
+                setLightbox(l => ({
+                  ...l,
+                  indice: dir === 0
+                    ? (l.indice - 1 + l.imagenes.length) % l.imagenes.length
+                    : (l.indice + 1) % l.imagenes.length
+                }));
+              }}
+              style={{
+                position: "fixed",
+                top: "50%",
+                [dir === 0 ? "left" : "right"]: "20px",
+                transform: "translateY(-50%)",
+                background: "rgba(255,255,255,0.12)",
+                border: "none",
+                color: "#fff",
+                fontSize: "1.2rem",
+                width: "48px",
+                height: "48px",
+                borderRadius: "999px",
+                cursor: "pointer",
+                zIndex: 10000,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+            >
+              {arrow}
+            </button>
+          ))}
+
+          {/* Contador */}
+          <div style={{
+            position: "fixed",
+            bottom: "22px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            color: "rgba(255,255,255,0.6)",
+            fontSize: "0.82rem",
+            letterSpacing: "2px"
+          }}>
+            {lightbox.indice + 1} / {lightbox.imagenes.length}
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
+    </div>
+  );
+};
+// ── FIN COMPONENTE GALERÍA INICIO ────────────────────────────────────────
+
 const AppContent = () => {
  const normalizarTexto = (texto) => {
   return texto
@@ -549,8 +876,6 @@ const [monedaRecibo, setMonedaRecibo] = useState("ARS");
 const [cotizacionRecibo, setCotizacionRecibo] = useState("");
 const [medioPagoRecibo, setMedioPagoRecibo] = useState("efectivo");
 const [observacionRecibo, setObservacionRecibo] = useState("");
-const [fechaRecibo, setFechaRecibo] = useState(() => new Date().toISOString().slice(0, 10));
-const [nombrePagadorRecibo, setNombrePagadorRecibo] = useState("");
 const [historialRecibosPropuestaId, setHistorialRecibosPropuestaId] = useState(null);
 const [resenasPublicas, setResenasPublicas] = useState([]);
 const [mostrarResenasAdmin, setMostrarResenasAdmin] = useState(false);
@@ -1503,8 +1828,6 @@ const limpiarFormularioRecibo = () => {
   setCotizacionRecibo("");
   setMedioPagoRecibo("efectivo");
   setObservacionRecibo("");
-  setFechaRecibo(new Date().toISOString().slice(0, 10));
-  setNombrePagadorRecibo("");
 };
 
 const abrirPanelRecibos = (prop) => {
@@ -1526,8 +1849,6 @@ const handleEditarRecibo = (recibo) => {
   setCotizacionRecibo(String(recibo.cotizacion || ""));
   setMedioPagoRecibo(recibo.medioPago || "efectivo");
   setObservacionRecibo(recibo.observacion || "");
-  setFechaRecibo(recibo.fechaEntrega || new Date().toISOString().slice(0, 10));
-  setNombrePagadorRecibo(recibo.nombrePagador || "");
 };
 
 const handleGuardarRecibo = async (prop) => {
@@ -1560,11 +1881,9 @@ const handleGuardarRecibo = async (prop) => {
     importePresupuesto: numeroDesdeTextoRecibo(prop.presupuesto || prop.importe || prop.importePropuesta),
     monedaEntrega: monedaRecibo,
     importeEntrega: importe,
-    cotizacion: cotizacion || "",
+    cotizacion: requiereCotizacion ? cotizacion : "",
     medioPago: medioPagoRecibo,
-    observacion: observacionRecibo,
-    fechaEntrega: fechaRecibo || new Date().toISOString().slice(0, 10),
-    nombrePagador: nombrePagadorRecibo.trim()
+    observacion: observacionRecibo
   };
 
   const nuevosRecibos = recibosActuales.some(item => item.id === idRecibo)
@@ -2791,6 +3110,135 @@ if (condiciones) {
         maxWidth: "1180px",
         margin: "0 auto"
       }}>
+        {/* ── GALERÍA ─────────────────────────────────── */}
+        {(() => {
+          const categorias = [
+            {
+              id: "xv",
+              label: "15 Años",
+              emoji: "✨",
+              imagenes: [
+                "/propuestas/xv-personalizado/hero.webp",
+                "/propuestas/xv-personalizado/grande-1.webp",
+                "/propuestas/xv-personalizado/grande-2.webp",
+                "/propuestas/xv-personalizado/grande-3.webp",
+                "/propuestas/xv-personalizado/emocion-1.webp",
+                "/propuestas/xv-personalizado/emocion-2.webp",
+                "/propuestas/xv-personalizado/emocion-3.webp",
+                "/propuestas/xv-personalizado/emocion-4.webp",
+                "/propuestas/xv-personalizado/emocion-5.webp",
+                "/propuestas/xv-personalizado/emocion-6.webp",
+                "/propuestas/xv-personalizado/banner.webp",
+                "/propuestas/xv-rustico-verde/hero.jpg",
+                "/propuestas/xv-rustico-verde/grande-1.jpg",
+                "/propuestas/xv-rustico-verde/grande-2.jpg",
+                "/propuestas/xv-rustico-verde/grande-3.jpg",
+                "/propuestas/xv-rustico-verde/emocion-1.jpg",
+                "/propuestas/xv-rustico-verde/emocion-2.jpg",
+                "/propuestas/xv-rustico-verde/emocion-3.jpg",
+                "/propuestas/xv-rustico-verde/emocion-4.jpg",
+                "/propuestas/xv-rustico-verde/emocion-5.jpg",
+                "/propuestas/xv-rustico-verde/emocion-6.png",
+                "/propuestas/xv-rustico-verde/banner.jpg",
+                "/propuestas/xv-romantico/hero.webp",
+                "/propuestas/xv-romantico/grande-1.webp",
+                "/propuestas/xv-romantico/grande-2.webp",
+                "/propuestas/xv-romantico/grande-3.webp",
+                "/propuestas/xv-romantico/emocion-1.webp",
+                "/propuestas/xv-romantico/emocion-2.webp",
+                "/propuestas/xv-romantico/emocion-3.webp",
+                "/propuestas/xv-romantico/emocion-4.webp",
+                "/propuestas/xv-romantico/emocion-5.webp",
+                "/propuestas/xv-romantico/emocion-6.webp",
+                "/propuestas/xv-romantico/banner.webp",
+                "/propuestas/xv-cine-teatro/hero.webp",
+                "/propuestas/xv-cine-teatro/1.webp",
+                "/propuestas/xv-cine-teatro/2.webp",
+                "/propuestas/xv-cine-teatro/3.webp",
+                "/propuestas/xv-cine-teatro/4.webp",
+                "/propuestas/xv-cine-teatro/5.webp",
+                "/propuestas/xv-cine-teatro/6.webp",
+                "/propuestas/xv-cine-teatro/banner.webp",
+                "/propuestas/xv-moderno/hero.webp",
+                "/propuestas/xv-moderno/grande-1.webp",
+                "/propuestas/xv-moderno/grande-2.webp",
+                "/propuestas/xv-moderno/grande-3.webp",
+                "/propuestas/xv-moderno/banner.webp",
+              ]
+            },
+            {
+              id: "bodas",
+              label: "Bodas",
+              emoji: "💍",
+              imagenes: [
+                "/propuestas/boda-verde-rustico/hero.jpg",
+                "/propuestas/boda-verde-rustico/grande-1.jpg",
+                "/propuestas/boda-verde-rustico/grande-2.jpg",
+                "/propuestas/boda-verde-rustico/emocion-1.jpg",
+                "/propuestas/boda-verde-rustico/emocion-2.jpg",
+                "/propuestas/boda-verde-rustico/emocion-3.jpg",
+                "/propuestas/boda-verde-rustico/emocion-4.jpg",
+                "/propuestas/boda-verde-rustico/emocion-5.jpg",
+                "/propuestas/boda-verde-rustico/emocion-6.jpg",
+                "/propuestas/boda-verde-rustico/banner.jpg",
+              ]
+            },
+            {
+              id: "empresas",
+              label: "Eventos corporativos",
+              emoji: "🏛️",
+              imagenes: [
+                "/propuestas/empresas-corporativo/hero.jpg",
+                "/propuestas/empresas-corporativo/grande-1.jpg",
+                "/propuestas/empresas-corporativo/grande-2.jpg",
+                "/propuestas/empresas-corporativo/grande-3.jpg",
+                "/propuestas/empresas-corporativo/emocion-1.jpg",
+                "/propuestas/empresas-corporativo/emocion-2.jpg",
+                "/propuestas/empresas-corporativo/emocion-3.jpg",
+                "/propuestas/empresas-corporativo/emocion-4.jpg",
+                "/propuestas/empresas-corporativo/emocion-5.jpg",
+                "/propuestas/empresas-corporativo/emocion-6.jpg",
+                "/propuestas/empresas-corporativo/banner.jpg",
+              ]
+            },
+            {
+              id: "infantil",
+              label: "Festejos infantiles",
+              emoji: "🎈",
+              imagenes: [
+                "/propuestas/festejo-infantil/hero.webp",
+                "/propuestas/festejo-infantil/banner.webp",
+                "/propuestas/festejo-infantil/grande-1.webp",
+                "/propuestas/festejo-infantil/grande-2.webp",
+                "/propuestas/festejo-infantil/grande-3.webp",
+                "/propuestas/festejo-infantil/grande-4.webp",
+                "/propuestas/festejo-infantil/chica-1.webp",
+                "/propuestas/festejo-infantil/chica-2.webp",
+                "/propuestas/festejo-infantil/chica-3.webp",
+                "/propuestas/festejo-infantil/chica-4.webp",
+                "/propuestas/festejo-infantil/chica-5.webp",
+              ]
+            },
+          ];
+
+          // carrusel con todas las imágenes mezcladas (sin repetir)
+          const todasLasImagenes = [];
+          const seen = new Set();
+          categorias.forEach(cat => {
+            cat.imagenes.forEach(img => {
+              if (!seen.has(img)) { seen.add(img); todasLasImagenes.push(img); }
+            });
+          });
+
+          return (
+            <GaleriaInicio
+              categorias={categorias}
+              todasLasImagenes={todasLasImagenes}
+            />
+          );
+        })()}
+        {/* ── FIN GALERÍA ──────────────────────────────── */}
+
         <div style={{
           fontFamily: "Brittany Signature, cursive",
           fontSize: "clamp(3.4rem, 9vw, 7.4rem)",
@@ -3895,22 +4343,6 @@ if (condiciones) {
       </div>
 
       <input
-        id={"formulario-recibo-" + prop._docId}
-        className="input-field"
-        type="date"
-        value={fechaRecibo}
-        onChange={(e) => setFechaRecibo(e.target.value)}
-        style={{marginBottom:"10px"}}
-      />
-
-      <input
-        className="input-field"
-        placeholder="Nombre de quien realiza el pago"
-        value={nombrePagadorRecibo}
-        onChange={(e) => setNombrePagadorRecibo(e.target.value)}
-      />
-
-      <input
         className="input-field"
         placeholder="Importe entregado"
         value={importeRecibo}
@@ -3942,12 +4374,14 @@ if (condiciones) {
         </select>
       </div>
 
-      <input
-        className="input-field"
-        placeholder="Valor del dólar tomado (cotización)"
-        value={cotizacionRecibo}
-        onChange={(e) => setCotizacionRecibo(e.target.value)}
-      />
+      {requiereCotizacion && (
+        <input
+          className="input-field"
+          placeholder="Cotización tomada para convertir"
+          value={cotizacionRecibo}
+          onChange={(e) => setCotizacionRecibo(e.target.value)}
+        />
+      )}
 
       <textarea
         className="input-field"
@@ -4019,7 +4453,7 @@ if (condiciones) {
                 {formatearDineroRecibo(recibo.importeEntrega, recibo.monedaEntrega)}
               </div>
               <div style={{fontSize:"0.75rem", color:"#777", marginTop:"3px"}}>
-                {recibo.fechaEntrega ? new Date(recibo.fechaEntrega + "T00:00:00").toLocaleDateString("es-AR") : formatearFechaRecibo(recibo.creada)} · {recibo.medioPago || "Sin medio"} · aplicado {formatearDineroRecibo(recibo.aplicadoPresupuesto, resumenRecibos.monedaPresupuesto)}
+                {formatearFechaRecibo(recibo.creada)} · {recibo.medioPago || "Sin medio"} · aplicado {formatearDineroRecibo(recibo.aplicadoPresupuesto, resumenRecibos.monedaPresupuesto)}
               </div>
               <div style={{fontSize:"0.75rem", color:"#777", marginTop:"3px"}}>
                 Saldo posterior: {formatearDineroRecibo(recibo.saldoPosterior, resumenRecibos.monedaPresupuesto)}
@@ -4045,16 +4479,9 @@ if (condiciones) {
                     type="button"
                     className="btn-luxury btn-outline"
                     style={{padding:"8px 10px", fontSize:"0.65rem"}}
-                    onClick={() => {
-                      handleEditarRecibo(recibo);
-                      setReciboPropuestaId(prop._docId);
-                      setHistorialRecibosPropuestaId(null);
-                      setTimeout(() => {
-                        document.getElementById("formulario-recibo-" + prop._docId)?.scrollIntoView({ behavior: "smooth", block: "center" });
-                      }, 100);
-                    }}
+                    onClick={() => handleEditarRecibo(recibo)}
                   >
-                    ✏️ Editar
+                    Editar
                   </button>
                 )}
 
