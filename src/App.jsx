@@ -870,6 +870,9 @@ const [estilosPropuesta, setEstilosPropuesta] = useState([]);
 const [propuestas, setPropuestas] = useState([]);
 const [mostrarPropuestasCreadas, setMostrarPropuestasCreadas] = useState(false);
 const [reciboPropuestaId, setReciboPropuestaId] = useState(null);
+const [modalRegalo, setModalRegalo] = useState(false);
+const [nombreRegalo, setNombreRegalo] = useState("");
+const [propIdRegalo, setPropIdRegalo] = useState(null);
 const [reciboEditandoId, setReciboEditandoId] = useState(null);
 const [importeRecibo, setImporteRecibo] = useState("");
 const [monedaRecibo, setMonedaRecibo] = useState("ARS");
@@ -4295,6 +4298,28 @@ if (condiciones) {
 >
   📲 Compartir propuesta
 </button>
+
+{prop.tipo === "infantil" && (
+  <button
+    type="button"
+    className="btn-luxury btn-outline"
+    style={{
+      width: "100%",
+      marginTop: "10px",
+      background: "linear-gradient(135deg, rgba(255,182,210,0.18) 0%, rgba(182,220,255,0.18) 100%)",
+      borderColor: "rgba(255,182,210,0.6)",
+      color: "#fff"
+    }}
+    onClick={() => {
+      setPropIdRegalo(prop._docId);
+      setNombreRegalo("");
+      setModalRegalo(true);
+    }}
+  >
+    🎁 Enviar como regalo
+  </button>
+)}
+
 <button
   className="btn-luxury btn-outline"
   style={{
@@ -7050,6 +7075,41 @@ setMesaActivaId(null);
         </div>
         </main>
     </div> {/* editor-layout */}
+
+  {modalRegalo && (() => {
+    const propRegalo = propuestas.find(p => p._docId === propIdRegalo);
+    const enviarRegalo = () => {
+      if (!nombreRegalo.trim() || !propRegalo) return;
+      const linkRegalo = window.location.origin + "/propuesta/" + propIdRegalo + "?regalo=" + encodeURIComponent(nombreRegalo.trim());
+      compartirLink({
+        link: linkRegalo,
+        titulo: "🎁 Un regalo especial para " + propRegalo.cliente,
+        texto: "Tiene un regalo esperándote 🎁",
+        mensajeCopiado: "Link de regalo copiado"
+      });
+    };
+    return (
+      <div onClick={() => setModalRegalo(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.72)", zIndex:9999, display:"flex", alignItems:"center", justifyContent:"center", padding:"20px" }}>
+        <div onClick={e => e.stopPropagation()} style={{ background:"linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)", borderRadius:"28px", padding:"36px 28px", maxWidth:"400px", width:"100%", border:"1.5px solid rgba(255,182,210,0.35)", boxShadow:"0 30px 80px rgba(0,0,0,0.6)", textAlign:"center" }}>
+          <div style={{ fontSize:"3rem", marginBottom:"8px" }}>🎁</div>
+          <h3 style={{ color:"#fff", fontSize:"1.4rem", fontFamily:"Brittany Signature, cursive", marginBottom:"6px" }}>Enviar propuesta como regalo</h3>
+          <p style={{ color:"rgba(255,255,255,0.55)", fontSize:"0.82rem", marginBottom:"24px", lineHeight:1.6 }}>El destinatario verá una sorpresa especial antes de ver la propuesta — sin precios.</p>
+          <div style={{ textAlign:"left", marginBottom:"8px" }}>
+            <label style={{ fontSize:"0.72rem", letterSpacing:"2px", textTransform:"uppercase", color:"rgba(255,255,255,0.45)", display:"block", marginBottom:"8px" }}>¿De parte de quién es el regalo?</label>
+            <input autoFocus className="input-field" placeholder="Ej: Tío Yoni, Los abuelos..." value={nombreRegalo} onChange={e => setNombreRegalo(e.target.value)} onKeyDown={e => e.key === "Enter" && enviarRegalo()} style={{ marginBottom:0 }} />
+          </div>
+          <div style={{ fontSize:"0.72rem", color:"rgba(255,255,255,0.3)", marginBottom:"22px", marginTop:"8px", fontStyle:"italic" }}>
+            Para: <strong style={{ color:"rgba(255,255,255,0.6)" }}>{propRegalo?.cliente}</strong>
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
+            <button type="button" className="btn-luxury" style={{ width:"100%", opacity: nombreRegalo.trim() ? 1 : 0.45 }} onClick={enviarRegalo} disabled={!nombreRegalo.trim()}>🎁 Enviar link de regalo</button>
+            <button type="button" className="btn-luxury btn-outline" style={{ width:"100%", fontSize:"0.75rem" }} onClick={() => setModalRegalo(false)}>Cancelar</button>
+          </div>
+        </div>
+      </div>
+    );
+  })()}
+
   </div>
 );
 };    
