@@ -93,6 +93,12 @@ const esRegalo = Boolean(modoRegalo);
     const elementos =
       document.querySelectorAll(".reveal-propuesta");
 
+    // En modo regalo, mostrar todo directamente sin animación
+    if (esRegalo) {
+      elementos.forEach(el => el.classList.add("visible"));
+      return;
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
 
@@ -117,7 +123,7 @@ const esRegalo = Boolean(modoRegalo);
 
     return () => observer.disconnect();
 
-  }, [propuesta, mostrarBienvenidaPropuesta]);
+  }, [propuesta, mostrarBienvenidaPropuesta, regaloPantallaMostrada]);
 
   useEffect(() => {
 
