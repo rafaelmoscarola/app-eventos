@@ -6674,8 +6674,6 @@ setMesaActivaId(null);
     );
   })()}
 
-  </div>
-  </div>
 );
 };
   const App = () => {
