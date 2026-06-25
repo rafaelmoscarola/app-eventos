@@ -29,7 +29,7 @@ const PropuestaCliente = () => {
   const [propuesta, setPropuesta] =
   useState(null);
   const [mostrarBienvenidaPropuesta, setMostrarBienvenidaPropuesta] =
-  useState(true);
+  useState(!modoRegalo);
   const [abriendoPropuesta, setAbriendoPropuesta] =
   useState(false);
   const [mostrarPopupCotillon, setMostrarPopupCotillon] =
@@ -1743,82 +1743,6 @@ if (!propuesta) {
 
 }
 
-if (mostrarBienvenidaPropuesta) {
-
-  return (
-
-    <div className={`bienvenida-propuesta ${abriendoPropuesta ? "abriendo" : ""}`}>
-
-      <div className="bienvenida-propuesta-card">
-
-        <div className="bienvenida-propuesta-foto">
-          <img
-            src="/propuestas/equipo/luisi-bienvenida.webp"
-            alt="Luisina Bagnaroli"
-          />
-        </div>
-
-        <div className="bienvenida-propuesta-texto">
-          <h1>
-            HOLA!
-          </h1>
-
-          <p>
-            Si llegaste hasta aquí, es porque conectaste con nuestra forma de trabajar y estás interesado en que seamos parte de uno de los momentos más importantes de tu vida. Y no imaginás la felicidad que eso genera en mí y en todo nuestro equipo.
-          </p>
-
-          <p>
-            Antes que nada, gracias. Gracias por tomarte este tiempo, por valorar los detalles, las emociones y todo lo que hay detrás de cada celebración.
-          </p>
-
-          <p>
-            Estás a punto de abrir nuestra propuesta... qué nervios. Detrás de cada idea, cada imagen y cada detalle, hay muchísimo corazón puesto en crear algo único, pensado especialmente para vos.
-          </p>
-
-          <p>
-            Soñamos cada evento junto a quienes nos eligen. Nos involucramos, acompañamos y diseñamos cada instante entendiendo lo importante y significativo que este momento es para vos y para las personas que amás.
-          </p>
-
-          <p>
-            Ojalá podamos trabajar juntos. Sería un honor acompañarte y transformar tu celebración en un recuerdo inolvidable.
-          </p>
-
-          <div className="bienvenida-propuesta-firma">
-            Luisina Bagnaroli
-          </div>
-
-          <button
-            type="button"
-            className="bienvenida-propuesta-btn"
-            disabled={abriendoPropuesta}
-            onClick={() => {
-              setAbriendoPropuesta(true);
-
-              setTimeout(() => {
-                window.scrollTo({
-                  top: 0,
-                  left: 0,
-                  behavior: "auto"
-                });
-
-                setMostrarBienvenidaPropuesta(false);
-              }, 950);
-            }}
-          >
-            Abrir propuesta
-          </button>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  );
-
-}
-
-
 if (esRegalo && !regaloPantallaMostrada) {
   return (
     <div style={{
@@ -1958,6 +1882,82 @@ if (esRegalo && !regaloPantallaMostrada) {
     </div>
   );
 }
+
+if (mostrarBienvenidaPropuesta) {
+
+  return (
+
+    <div className={`bienvenida-propuesta ${abriendoPropuesta ? "abriendo" : ""}`}>
+
+      <div className="bienvenida-propuesta-card">
+
+        <div className="bienvenida-propuesta-foto">
+          <img
+            src="/propuestas/equipo/luisi-bienvenida.webp"
+            alt="Luisina Bagnaroli"
+          />
+        </div>
+
+        <div className="bienvenida-propuesta-texto">
+          <h1>
+            HOLA!
+          </h1>
+
+          <p>
+            Si llegaste hasta aquí, es porque conectaste con nuestra forma de trabajar y estás interesado en que seamos parte de uno de los momentos más importantes de tu vida. Y no imaginás la felicidad que eso genera en mí y en todo nuestro equipo.
+          </p>
+
+          <p>
+            Antes que nada, gracias. Gracias por tomarte este tiempo, por valorar los detalles, las emociones y todo lo que hay detrás de cada celebración.
+          </p>
+
+          <p>
+            Estás a punto de abrir nuestra propuesta... qué nervios. Detrás de cada idea, cada imagen y cada detalle, hay muchísimo corazón puesto en crear algo único, pensado especialmente para vos.
+          </p>
+
+          <p>
+            Soñamos cada evento junto a quienes nos eligen. Nos involucramos, acompañamos y diseñamos cada instante entendiendo lo importante y significativo que este momento es para vos y para las personas que amás.
+          </p>
+
+          <p>
+            Ojalá podamos trabajar juntos. Sería un honor acompañarte y transformar tu celebración en un recuerdo inolvidable.
+          </p>
+
+          <div className="bienvenida-propuesta-firma">
+            Luisina Bagnaroli
+          </div>
+
+          <button
+            type="button"
+            className="bienvenida-propuesta-btn"
+            disabled={abriendoPropuesta}
+            onClick={() => {
+              setAbriendoPropuesta(true);
+
+              setTimeout(() => {
+                window.scrollTo({
+                  top: 0,
+                  left: 0,
+                  behavior: "auto"
+                });
+
+                setMostrarBienvenidaPropuesta(false);
+              }, 950);
+            }}
+          >
+            Abrir propuesta
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  );
+
+}
+
 
 if (esAlquiler) {
 
