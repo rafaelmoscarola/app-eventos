@@ -1,10 +1,12 @@
 import React, {
   useEffect,
-  useState
+  useState,
+  useRef
 } from "react";
 
 import {
-  useParams
+  useParams,
+  useLocation
 } from "react-router-dom";
 
 import {
@@ -17,9 +19,18 @@ import {
   templatesPropuesta,
   contenidoGlobal
 } from "./templatesPropuesta";
+import { jsPDF } from "jspdf";
 
 const PropuestaCliente = () => {
      const { id } = useParams();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const modoRegalo = searchParams.get("regalo");
+  const esRegalo = !!modoRegalo;
+
+  const [faseRegalo, setFaseRegalo] = useState(esRegalo ? "sorpresa" : "propuesta"); // sorpresa | abriendo | propuesta
+  const [lazosAbiertos, setLazosAbiertos] = useState(false);
+
   const [propuesta, setPropuesta] =
   useState(null);
   const [mostrarBienvenidaPropuesta, setMostrarBienvenidaPropuesta] =
@@ -2100,6 +2111,243 @@ if (esAlquiler) {
   );
 
 }
+
+  // ── MODO REGALO: pantalla sorpresa ───────────────────────────────────
+  if (esRegalo && faseRegalo === "sorpresa") {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "linear-gradient(145deg, #0d1b3e 0%, #1a0a2e 40%, #0a1628 100%)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+        position: "relative"
+      }}>
+
+        {/* Estrellas de fondo */}
+        <style>{`
+          @keyframes flotar { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-18px) rotate(8deg)} }
+          @keyframes brillar { 0%,100%{opacity:0.3;transform:scale(0.8)} 50%{opacity:1;transform:scale(1.2)} }
+          @keyframes caer { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(100vh) rotate(720deg);opacity:0} }
+          @keyframes lazoPop { 0%{transform:scale(0) rotate(-15deg);opacity:0} 60%{transform:scale(1.12) rotate(4deg);opacity:1} 80%{transform:scale(0.96) rotate(-2deg)} 100%{transform:scale(1) rotate(0deg);opacity:1} }
+          @keyframes lazoAbrir { 0%{transform:scaleY(1) rotate(0deg)} 30%{transform:scaleY(0.2) rotate(15deg)} 60%{transform:scaleY(0) rotate(30deg) scaleX(1.8)} 100%{transform:scaleY(0) rotate(45deg) scaleX(0) translateY(-60px);opacity:0} }
+          @keyframes slideUp { from{transform:translateY(40px);opacity:0} to{transform:translateY(0);opacity:1} }
+          @keyframes pulseGlow { 0%,100%{box-shadow:0 0 30px rgba(255,182,210,0.3),0 0 60px rgba(182,148,255,0.2)} 50%{box-shadow:0 0 50px rgba(255,182,210,0.6),0 0 100px rgba(182,148,255,0.4)} }
+          .estrellita { position:absolute; border-radius:50%; animation:brillar linear infinite; }
+          .confeti { position:fixed; width:10px; height:10px; border-radius:2px; animation:caer linear forwards; top:-20px; }
+        `}</style>
+
+        {/* Estrellas decorativas */}
+        {[...Array(22)].map((_, i) => (
+          <div key={i} className="estrellita" style={{
+            width: `${3 + (i % 5)}px`,
+            height: `${3 + (i % 5)}px`,
+            background: i % 3 === 0 ? "#ffb6d2" : i % 3 === 1 ? "#b694ff" : "#b8e0ff",
+            left: `${(i * 17 + 5) % 95}%`,
+            top: `${(i * 13 + 8) % 88}%`,
+            animationDuration: `${2.2 + (i % 4) * 0.7}s`,
+            animationDelay: `${(i % 5) * 0.3}s`,
+            opacity: 0.5
+          }} />
+        ))}
+
+        {/* Globos flotantes */}
+        {["🎈","🎀","⭐","🎊","🌟","🎁"].map((emoji, i) => (
+          <div key={i} style={{
+            position: "absolute",
+            fontSize: `${1.8 + (i % 3) * 0.6}rem`,
+            left: `${[8,88,14,80,22,76][i]}%`,
+            top: `${[12,18,72,68,42,48][i]}%`,
+            animation: `flotar ${3 + i * 0.5}s ease-in-out infinite`,
+            animationDelay: `${i * 0.4}s`,
+            opacity: 0.75,
+            filter: "drop-shadow(0 4px 12px rgba(255,182,210,0.5))"
+          }}>
+            {emoji}
+          </div>
+        ))}
+
+        {/* Card principal */}
+        <div style={{
+          position: "relative",
+          zIndex: 10,
+          textAlign: "center",
+          padding: "20px",
+          maxWidth: "420px",
+          width: "100%"
+        }}>
+
+          {/* Caja de regalo animada */}
+          <div style={{
+            fontSize: "5.5rem",
+            marginBottom: "8px",
+            animation: "lazoPop 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards",
+            display: "inline-block",
+            filter: "drop-shadow(0 8px 24px rgba(255,182,210,0.5))"
+          }}>
+            🎁
+          </div>
+
+          {/* Card borde brillante */}
+          <div style={{
+            background: "linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,182,210,0.06) 100%)",
+            borderRadius: "32px",
+            padding: "36px 28px 32px",
+            border: "1.5px solid rgba(255,182,210,0.3)",
+            backdropFilter: "blur(20px)",
+            animation: "pulseGlow 3s ease-in-out infinite",
+            marginTop: "8px"
+          }}>
+
+            <div style={{
+              fontSize: "0.72rem",
+              letterSpacing: "3px",
+              textTransform: "uppercase",
+              color: "rgba(255,182,210,0.7)",
+              marginBottom: "20px",
+              fontWeight: 700,
+              animation: "slideUp 0.6s ease 0.3s both"
+            }}>
+              Tenés un regalo especial 🌟
+            </div>
+
+            {/* Nombre del homenajeado en tipografía de la propuesta */}
+            <div style={{
+              fontFamily: "Brittany Signature, cursive",
+              fontSize: "clamp(3rem, 14vw, 4.8rem)",
+              color: "#fff4b8",
+              lineHeight: 1.1,
+              marginBottom: "18px",
+              textShadow: "0 0 28px rgba(255,244,184,0.6), 0 0 60px rgba(255,244,184,0.25)",
+              animation: "slideUp 0.6s ease 0.5s both"
+            }}>
+              {propuesta?.cliente}
+            </div>
+
+            <div style={{
+              color: "rgba(255,255,255,0.55)",
+              fontSize: "0.9rem",
+              marginBottom: "6px",
+              animation: "slideUp 0.6s ease 0.65s both"
+            }}>
+              tiene un regalo de
+            </div>
+
+            {/* Nombre del que regala en letra común */}
+            <div style={{
+              fontFamily: "Inter, Arial, sans-serif",
+              fontSize: "1.45rem",
+              fontWeight: 700,
+              color: "#ffb6d2",
+              marginBottom: "32px",
+              letterSpacing: "0.5px",
+              textShadow: "0 0 20px rgba(255,182,210,0.5)",
+              animation: "slideUp 0.6s ease 0.8s both"
+            }}>
+              {modoRegalo} 💝
+            </div>
+
+            {/* Botón abrir regalo */}
+            <button
+              type="button"
+              onClick={() => {
+                setFaseRegalo("abriendo");
+                // Confeti
+                for (let i = 0; i < 35; i++) {
+                  setTimeout(() => {
+                    const el = document.createElement("div");
+                    el.className = "confeti";
+                    el.style.left = Math.random() * 100 + "vw";
+                    el.style.background = ["#ffb6d2","#b694ff","#b8e0ff","#fff4b8","#a8f0c6"][Math.floor(Math.random()*5)];
+                    el.style.animationDuration = (1.8 + Math.random() * 1.8) + "s";
+                    el.style.animationDelay = "0s";
+                    el.style.width = (7 + Math.random() * 8) + "px";
+                    el.style.height = (7 + Math.random() * 8) + "px";
+                    document.body.appendChild(el);
+                    setTimeout(() => el.remove(), 3600);
+                  }, i * 60);
+                }
+                setTimeout(() => setFaseRegalo("propuesta"), 1800);
+              }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "18px 40px",
+                borderRadius: "999px",
+                border: "none",
+                background: "linear-gradient(135deg, #ffb6d2 0%, #b694ff 50%, #b8e0ff 100%)",
+                color: "#1a0a2e",
+                fontWeight: 800,
+                fontSize: "0.9rem",
+                letterSpacing: "1.5px",
+                textTransform: "uppercase",
+                cursor: "pointer",
+                boxShadow: "0 12px 40px rgba(182,148,255,0.45)",
+                animation: "slideUp 0.6s ease 1s both",
+                transition: "transform 0.2s ease, box-shadow 0.2s ease"
+              }}
+              onMouseOver={e => { e.currentTarget.style.transform = "translateY(-3px) scale(1.03)"; e.currentTarget.style.boxShadow = "0 20px 55px rgba(182,148,255,0.6)"; }}
+              onMouseOut={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 12px 40px rgba(182,148,255,0.45)"; }}
+            >
+              <span style={{ fontSize: "1.2rem" }}>🎀</span>
+              Abrir mi regalo
+            </button>
+
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Transición abriendo (lazo que se abre)
+  if (esRegalo && faseRegalo === "abriendo") {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "linear-gradient(145deg, #0d1b3e 0%, #1a0a2e 40%, #0a1628 100%)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+      }}>
+        <style>{`
+          @keyframes lazoSplit { 
+            0%{transform:scaleX(1) scaleY(1);opacity:1} 
+            40%{transform:scaleX(1.3) scaleY(0.6);opacity:1} 
+            70%{transform:scaleX(2.5) scaleY(0.1);opacity:0.6} 
+            100%{transform:scaleX(4) scaleY(0);opacity:0} 
+          }
+          @keyframes brilloFinal { 
+            0%{opacity:0;transform:scale(0.5)} 
+            50%{opacity:1;transform:scale(1.3)} 
+            100%{opacity:0;transform:scale(2.5)} 
+          }
+        `}</style>
+        <div style={{ textAlign: "center", position: "relative" }}>
+          <div style={{
+            fontSize: "4rem",
+            animation: "lazoSplit 1s cubic-bezier(0.4,0,0.2,1) forwards",
+            display: "inline-block"
+          }}>
+            🎀
+          </div>
+          <div style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%,-50%)",
+            fontSize: "6rem",
+            animation: "brilloFinal 1s ease 0.4s both"
+          }}>
+            ✨
+          </div>
+        </div>
+      </div>
+    );
+  }
+  // ── FIN MODO REGALO ──────────────────────────────────────────────────
+
   return (
 
     <div
@@ -2875,6 +3123,7 @@ background:"#111",
         label:"Invitados",
         valor: propuesta.invitados || "-"
       },
+      ...(!esRegalo ? [
       {
         icono:"💰",
         label:"Valor total",
@@ -2896,6 +3145,7 @@ background:"#111",
         label:"Cuotas",
         valor: propuesta.cuotas || "-"
       }
+      ] : [])
     ].map((item, index) => (
 
       <div
