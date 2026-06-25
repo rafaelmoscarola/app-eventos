@@ -4,7 +4,8 @@ import React, {
 } from "react";
 
 import {
-  useParams
+  useParams,
+  useLocation
 } from "react-router-dom";
 
 import {
@@ -20,6 +21,11 @@ import {
 
 const PropuestaCliente = () => {
      const { id } = useParams();
+  const location = useLocation();
+  const modoRegalo = new URLSearchParams(location.search).get("regalo");
+  const nombreRegaloDecoded = modoRegalo ? decodeURIComponent(modoRegalo.replace(/-/g, " ")) : null;
+  const [regaloPantallaMostrada, setRegaloPantallaMostrada] = useState(false);
+  const [regaloConfeti, setRegaloConfeti] = useState(false);
   const [propuesta, setPropuesta] =
   useState(null);
   const [mostrarBienvenidaPropuesta, setMostrarBienvenidaPropuesta] =
@@ -79,6 +85,7 @@ const template =
     : "$";
 const esAlquiler =
   propuesta?.tipo === "alquiler";
+const esRegalo = Boolean(modoRegalo);
    useEffect(() => {
 
     if (!propuesta || mostrarBienvenidaPropuesta) return;
@@ -1811,6 +1818,147 @@ if (mostrarBienvenidaPropuesta) {
 
 }
 
+
+if (esRegalo && !regaloPantallaMostrada) {
+  return (
+    <div style={{
+      position: "fixed",
+      inset: 0,
+      background: "radial-gradient(circle at 30% 20%, rgba(255,100,200,0.22), transparent 36%), radial-gradient(circle at 70% 80%, rgba(100,180,255,0.18), transparent 34%), #0d0510",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexDirection: "column",
+      textAlign: "center",
+      padding: "30px",
+      overflow: "hidden",
+      zIndex: 9999
+    }}>
+
+      {/* Estrellas de fondo */}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
+        {Array.from({ length: 40 }).map((_, i) => (
+          <div key={i} style={{
+            position: "absolute",
+            left: `${(i * 37 + 11) % 100}%`,
+            top: `${(i * 53 + 7) % 100}%`,
+            width: i % 4 === 0 ? "6px" : "3px",
+            height: i % 4 === 0 ? "6px" : "3px",
+            borderRadius: "50%",
+            background: i % 3 === 0 ? "#ffd6f5" : i % 3 === 1 ? "#c8e8ff" : "#fff8d0",
+            opacity: 0.6 + (i % 4) * 0.1,
+            animation: `parpadeoEstrella ${2 + (i % 5)}s ease-in-out ${(i % 7) * 0.3}s infinite alternate`,
+            boxShadow: `0 0 ${4 + i % 5}px currentColor`
+          }} />
+        ))}
+      </div>
+
+      {/* Globos */}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
+        {["🎈", "🎉", "🎊", "🎈", "🎉", "🎈"].map((emoji, i) => (
+          <div key={i} style={{
+            position: "absolute",
+            left: `${10 + i * 16}%`,
+            bottom: "-10%",
+            fontSize: `${2 + (i % 2) * 0.8}rem`,
+            animation: `subirGlobo ${6 + i * 1.2}s ease-in ${i * 0.8}s infinite`,
+            opacity: 0.85
+          }}>
+            {emoji}
+          </div>
+        ))}
+      </div>
+
+      {/* Contenido central */}
+      <div style={{ position: "relative", zIndex: 2 }}>
+        <div style={{
+          fontSize: "clamp(1.8rem, 8vw, 3.2rem)",
+          color: "rgba(255,255,255,0.82)",
+          fontFamily: "Plus Jakarta Sans, sans-serif",
+          fontWeight: 300,
+          letterSpacing: "2px",
+          marginBottom: "18px"
+        }}>
+          ✨
+        </div>
+
+        <div style={{
+          fontFamily: "Brittany Signature, cursive",
+          fontSize: "clamp(3.5rem, 14vw, 7rem)",
+          color: "#fff",
+          lineHeight: 1.05,
+          textShadow: "0 0 40px rgba(255,180,240,0.5), 0 0 80px rgba(200,150,255,0.3)",
+          marginBottom: "10px"
+        }}>
+          {propuesta?.cliente}
+        </div>
+
+        <div style={{
+          fontSize: "clamp(1rem, 4vw, 1.45rem)",
+          color: "rgba(255,255,255,0.78)",
+          fontWeight: 300,
+          marginBottom: "8px",
+          letterSpacing: "1px"
+        }}>
+          tiene un regalo de
+        </div>
+
+        <div style={{
+          fontSize: "clamp(1.5rem, 6vw, 2.6rem)",
+          color: "#ffd6f5",
+          fontWeight: 700,
+          marginBottom: "52px",
+          textShadow: "0 0 20px rgba(255,150,220,0.4)"
+        }}>
+          {nombreRegaloDecoded}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setRegaloConfeti(true);
+            setTimeout(() => {
+              setRegaloPantallaMostrada(true);
+            }, 900);
+          }}
+          style={{
+            padding: "20px 44px",
+            borderRadius: "999px",
+            border: "none",
+            background: "linear-gradient(135deg, #d060a8, #e890cc, #b040c0)",
+            color: "#fff",
+            fontSize: "1.05rem",
+            fontWeight: 800,
+            letterSpacing: "2px",
+            textTransform: "uppercase",
+            cursor: "pointer",
+            boxShadow: "0 20px 60px rgba(180,60,160,0.45)",
+            transform: regaloConfeti ? "scale(0.97)" : "scale(1)",
+            transition: "all 0.2s ease",
+            position: "relative",
+            overflow: "hidden"
+          }}
+        >
+          🎁 Abrir mi regalo
+        </button>
+      </div>
+
+      <style>{`
+        @keyframes parpadeoEstrella {
+          from { opacity: 0.3; transform: scale(0.8); }
+          to { opacity: 1; transform: scale(1.2); }
+        }
+        @keyframes subirGlobo {
+          0% { transform: translateY(0) rotate(-8deg); opacity: 0; }
+          10% { opacity: 0.9; }
+          90% { opacity: 0.7; }
+          100% { transform: translateY(-120vh) rotate(8deg); opacity: 0; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 if (esAlquiler) {
 
   const destacadosAlquiler =
@@ -2881,7 +3029,8 @@ background:"#111",
         valor: propuesta.presupuesto
   ? `${simboloMoneda}${propuesta.presupuesto}`
   : "-",
-        destacado: true
+        destacado: true,
+        soloAdmin: true
       },
       {
         icono:"💳",
@@ -2889,14 +3038,16 @@ background:"#111",
         valor: propuesta.anticipo
   ? `${simboloMoneda}${propuesta.anticipo}`
   : "-",
-        destacado: true
+        destacado: true,
+        soloAdmin: true
       },
       {
         icono:"🧾",
         label:"Cuotas",
-        valor: propuesta.cuotas || "-"
+        valor: propuesta.cuotas || "-",
+        soloAdmin: true
       }
-    ].map((item, index) => (
+    ].filter(item => !esRegalo || !item.soloAdmin).map((item, index) => (
 
       <div
         key={index}

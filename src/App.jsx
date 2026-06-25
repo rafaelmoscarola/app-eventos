@@ -879,6 +879,9 @@ const [observacionRecibo, setObservacionRecibo] = useState("");
 const [historialRecibosPropuestaId, setHistorialRecibosPropuestaId] = useState(null);
 const [resenasPublicas, setResenasPublicas] = useState([]);
 const [mostrarResenasAdmin, setMostrarResenasAdmin] = useState(false);
+const [modalRegalo, setModalRegalo] = useState(false);
+const [nombreRegalo, setNombreRegalo] = useState("");
+const [propIdRegalo, setPropIdRegalo] = useState(null);
 const [nuevaPropuesta, setNuevaPropuesta] =
 useState({
 
@@ -4295,6 +4298,24 @@ if (condiciones) {
 >
   📲 Compartir propuesta
 </button>
+{prop.tipo === "infantil" && (
+  <button
+    className="btn-luxury btn-outline"
+    style={{
+      width:"100%",
+      marginTop:"10px",
+      borderColor: "#e8a0c8",
+      color: "#c060a0"
+    }}
+    onClick={() => {
+      setPropIdRegalo(prop._docId);
+      setNombreRegalo("");
+      setModalRegalo(true);
+    }}
+  >
+    🎁 Enviar como regalo
+  </button>
+)}
 <button
   className="btn-luxury btn-outline"
   style={{
@@ -7053,7 +7074,102 @@ setMesaActivaId(null);
   </div>
 );
 };    
-  const App = () => {
+  
+{/* MODAL REGALO INFANTIL */}
+{modalRegalo && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.65)",
+      backdropFilter: "blur(8px)",
+      zIndex: 9999,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "22px"
+    }}
+    onClick={() => setModalRegalo(false)}
+  >
+    <div
+      style={{
+        background: "linear-gradient(135deg, #fff8fd, #fff0f8)",
+        borderRadius: "28px",
+        padding: "44px 36px",
+        width: "min(480px, 100%)",
+        boxShadow: "0 30px 90px rgba(180,80,140,0.22)",
+        border: "1px solid rgba(220,130,190,0.34)",
+        textAlign: "center"
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div style={{ fontSize: "2.8rem", marginBottom: "14px" }}>🎁</div>
+
+      <h2 style={{
+        fontFamily: "Playfair Display, serif",
+        fontSize: "1.9rem",
+        marginBottom: "8px",
+        color: "#5a1a3a"
+      }}>
+        Enviar como regalo
+      </h2>
+
+      <p style={{
+        color: "#a05080",
+        fontSize: "0.92rem",
+        lineHeight: 1.6,
+        marginBottom: "28px"
+      }}>
+        Escribí el nombre de quien regala. El link abrirá una pantalla sorpresa especial antes de mostrar la propuesta.
+      </p>
+
+      <input
+        className="input-field"
+        style={{ textAlign: "center", fontSize: "1.1rem", marginBottom: "22px" }}
+        placeholder="Ej: Tío Yoni, La familia García..."
+        value={nombreRegalo}
+        onChange={(e) => setNombreRegalo(e.target.value)}
+        autoFocus
+      />
+
+      <button
+        className="btn-luxury"
+        style={{
+          width: "100%",
+          background: "linear-gradient(135deg, #d060a0, #e890c8)",
+          marginBottom: "12px"
+        }}
+        onClick={() => {
+          if (!nombreRegalo.trim()) {
+            alert("Escribí el nombre de quien regala");
+            return;
+          }
+          const nombreLimpio = nombreRegalo.trim().replace(/\s+/g, "-");
+          const link = window.location.origin + "/propuesta/" + propIdRegalo + "?regalo=" + encodeURIComponent(nombreLimpio);
+          setModalRegalo(false);
+          compartirLink({
+            link,
+            titulo: "Un regalo especial",
+            texto: "Tiene un regalo muy especial para vos 🎁",
+            mensajeCopiado: "Link de regalo copiado"
+          });
+        }}
+      >
+        🎁 Generar y compartir link de regalo
+      </button>
+
+      <button
+        className="btn-luxury btn-outline"
+        style={{ width: "100%", borderColor: "#d0a0c0", color: "#a06080" }}
+        onClick={() => setModalRegalo(false)}
+      >
+        Cancelar
+      </button>
+    </div>
+  </div>
+)}
+
+const App = () => {
   return (
     <Routes>
       <Route path="/" element={<AppContent />} />
