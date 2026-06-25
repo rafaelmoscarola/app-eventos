@@ -17,7 +17,6 @@ import {
   templatesPropuesta,
   contenidoGlobal
 } from "./templatesPropuesta";
-import { jsPDF } from "jspdf";
 
 const PropuestaCliente = () => {
      const { id } = useParams();
@@ -80,272 +79,6 @@ const template =
     : "$";
 const esAlquiler =
   propuesta?.tipo === "alquiler";
-
-const esEmpresas =
-  propuesta?.tipo === "empresas";
-
-const descargarPropuestaPDF = () => {
-  const pdf = new jsPDF({ unit: "mm", format: "a4" });
-  const W = 210;
-  const marginX = 18;
-  const anchoUtil = W - marginX * 2;
-  let y = 0;
-
-  // Paleta corporativa
-  const dorado = [197, 160, 89];
-  const oscuro = [26, 26, 26];
-  const grisTexto = [80, 80, 80];
-  const grisClaro = [240, 240, 240];
-  const blanco = [255, 255, 255];
-
-  // ── CABECERA ──────────────────────────────────────
-  pdf.setFillColor(18, 18, 18);
-  pdf.rect(0, 0, W, 46, "F");
-
-  pdf.setFillColor(...dorado);
-  pdf.rect(0, 0, 5, 46, "F");
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(22);
-  pdf.setTextColor(...blanco);
-  pdf.text("Luisina Bagnaroli", marginX + 4, 20);
-
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(8.5);
-  pdf.setTextColor(200, 180, 130);
-  pdf.text("DISEÑO Y PRODUCCIÓN DE EVENTOS", marginX + 4, 28);
-
-  // Tipo de propuesta en cabecera
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(8);
-  pdf.setTextColor(...dorado);
-  pdf.text("PROPUESTA CORPORATIVA", W - marginX, 20, { align: "right" });
-
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(8);
-  pdf.setTextColor(180, 160, 110);
-  const fechaHoy = new Date().toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" });
-  pdf.text(fechaHoy, W - marginX, 28, { align: "right" });
-
-  y = 58;
-
-  // ── TÍTULO PROPUESTA ──────────────────────────────
-  pdf.setFont("times", "italic");
-  pdf.setFontSize(28);
-  pdf.setTextColor(...oscuro);
-  pdf.text("Propuesta para:", marginX, y);
-  y += 11;
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(22);
-  pdf.setTextColor(...dorado);
-  pdf.text(propuesta.cliente || "Cliente", marginX, y);
-  y += 5;
-
-  // Línea decorativa
-  pdf.setDrawColor(...dorado);
-  pdf.setLineWidth(0.6);
-  pdf.line(marginX, y, marginX + 80, y);
-  y += 12;
-
-  // ── DATOS DEL EVENTO ─────────────────────────────
-  pdf.setFillColor(248, 246, 242);
-  pdf.roundedRect(marginX, y, anchoUtil, 44, 4, 4, "F");
-  pdf.setDrawColor(...dorado);
-  pdf.setLineWidth(0.3);
-  pdf.roundedRect(marginX, y, anchoUtil, 44, 4, 4, "S");
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(7.5);
-  pdf.setTextColor(...dorado);
-  pdf.text("DATOS DEL EVENTO", marginX + 7, y + 8);
-
-  y += 13;
-
-  const datosEvento = [
-    { label: "Fecha", valor: propuesta.fecha || "-" },
-    { label: "Lugar", valor: propuesta.lugar || "-" },
-    { label: "Espacio / Salón", valor: propuesta.salon || propuesta.espacioSalon || "-" },
-    { label: "Invitados", valor: propuesta.invitados ? String(propuesta.invitados) : "-" },
-  ];
-
-  const colW = anchoUtil / 2 - 6;
-  datosEvento.forEach((dato, i) => {
-    const col = i % 2;
-    const xPos = marginX + 7 + col * (colW + 12);
-    const yFila = y + Math.floor(i / 2) * 13;
-
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(7);
-    pdf.setTextColor(...grisTexto);
-    pdf.text(dato.label.toUpperCase(), xPos, yFila);
-
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(9);
-    pdf.setTextColor(...oscuro);
-    pdf.text(dato.valor, xPos, yFila + 5);
-  });
-
-  y += 40;
-
-  // ── COSTOS ───────────────────────────────────────
-  const simbolo = propuesta.moneda === "USD" ? "USD " : "$";
-
-  const costos = [
-    {
-      label: "VALOR TOTAL DEL SERVICIO",
-      valor: propuesta.presupuesto ? `${simbolo}${propuesta.presupuesto}` : "-",
-      destacado: true
-    },
-    {
-      label: "ANTICIPO REQUERIDO",
-      valor: propuesta.anticipo ? `${simbolo}${propuesta.anticipo}` : "-",
-      destacado: true
-    },
-    {
-      label: "MODALIDAD DE PAGO",
-      valor: propuesta.cuotas || "-",
-      destacado: false
-    },
-  ];
-
-  const costoW = anchoUtil / costos.length - 5;
-  costos.forEach((costo, i) => {
-    const xCard = marginX + i * (costoW + 7.5);
-    const bgColor = costo.destacado ? [18, 18, 18] : [245, 243, 238];
-    const textColor = costo.destacado ? blanco : oscuro;
-    const labelColor = costo.destacado ? [180, 155, 100] : [...grisTexto];
-
-    pdf.setFillColor(...bgColor);
-    pdf.roundedRect(xCard, y, costoW, 32, 4, 4, "F");
-
-    if (costo.destacado) {
-      pdf.setFillColor(...dorado);
-      pdf.roundedRect(xCard, y, costoW, 2.5, 1, 1, "F");
-    }
-
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(6.5);
-    pdf.setTextColor(...labelColor);
-    pdf.text(costo.label, xCard + 7, y + 10);
-
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(costo.destacado ? 15 : 12);
-    pdf.setTextColor(...textColor);
-    pdf.text(costo.valor, xCard + 7, y + 24);
-  });
-
-  y += 44;
-
-  // ── INCLUYE ──────────────────────────────────────
-  const incluyeTexto = propuesta.incluye || "-";
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(7.5);
-  pdf.setTextColor(...dorado);
-  pdf.text("INCLUYE", marginX, y);
-
-  pdf.setDrawColor(...dorado);
-  pdf.setLineWidth(0.4);
-  pdf.line(marginX + 18, y - 1, marginX + anchoUtil * 0.45, y - 1);
-
-  y += 5;
-
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(9);
-  pdf.setTextColor(...grisTexto);
-
-  const lineasIncluye = pdf.splitTextToSize(incluyeTexto, anchoUtil * 0.9);
-
-  // Fondo sutil para el bloque incluye
-  const altoIncluye = lineasIncluye.length * 5.2 + 10;
-  pdf.setFillColor(252, 250, 246);
-  pdf.roundedRect(marginX, y, anchoUtil, altoIncluye, 3, 3, "F");
-
-  y += 6;
-  lineasIncluye.forEach(linea => {
-    if (y > 265) {
-      pdf.addPage();
-      y = 20;
-    }
-    pdf.text(linea, marginX + 6, y);
-    y += 5.2;
-  });
-  y += 8;
-
-  // ── OBSERVACIONES ────────────────────────────────
-  if (propuesta.observaciones && propuesta.observaciones.trim() !== "") {
-    if (y > 240) { pdf.addPage(); y = 20; }
-
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(7.5);
-    pdf.setTextColor(...dorado);
-    pdf.text("OBSERVACIONES", marginX, y);
-
-    pdf.setDrawColor(...dorado);
-    pdf.setLineWidth(0.4);
-    pdf.line(marginX + 36, y - 1, marginX + anchoUtil * 0.55, y - 1);
-
-    y += 5;
-
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(9);
-    pdf.setTextColor(...grisTexto);
-
-    const lineasObs = pdf.splitTextToSize(propuesta.observaciones, anchoUtil * 0.9);
-    const altoObs = lineasObs.length * 5.2 + 10;
-    pdf.setFillColor(252, 250, 246);
-    pdf.roundedRect(marginX, y, anchoUtil, altoObs, 3, 3, "F");
-
-    y += 6;
-    lineasObs.forEach(linea => {
-      if (y > 268) { pdf.addPage(); y = 20; }
-      pdf.text(linea, marginX + 6, y);
-      y += 5.2;
-    });
-    y += 8;
-  }
-
-  // ── BLOQUE DE CONTACTO ───────────────────────────
-  if (y > 240) { pdf.addPage(); y = 20; }
-
-  pdf.setFillColor(245, 243, 238);
-  pdf.roundedRect(marginX, y, anchoUtil, 24, 4, 4, "F");
-  pdf.setFillColor(...dorado);
-  pdf.roundedRect(marginX, y, anchoUtil, 2.5, 1, 1, "F");
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(8);
-  pdf.setTextColor(...oscuro);
-  pdf.text("¿Consultas o querés avanzar con esta propuesta?", marginX + 7, y + 11);
-
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(8);
-  pdf.setTextColor(...grisTexto);
-  pdf.text("WhatsApp: +54 340 459-7725  ·  @armalocomoquieras", marginX + 7, y + 19);
-
-  y += 32;
-
-  // ── PIE DE PÁGINA ─────────────────────────────────
-  const totalPages = pdf.internal.getNumberOfPages();
-  for (let p = 1; p <= totalPages; p++) {
-    pdf.setPage(p);
-    pdf.setFillColor(18, 18, 18);
-    pdf.rect(0, 285, W, 12, "F");
-    pdf.setFont("times", "italic");
-    pdf.setFontSize(8.5);
-    pdf.setTextColor(180, 155, 100);
-    pdf.text("Luisina Bagnaroli · Diseño y producción de eventos", W / 2, 292, { align: "center" });
-    if (totalPages > 1) {
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(7);
-      pdf.setTextColor(130, 110, 80);
-      pdf.text(`${p} / ${totalPages}`, W - marginX, 292, { align: "right" });
-    }
-  }
-
-  const nombreArchivo = `Propuesta_LB_${(propuesta.cliente || "Empresa").replace(/\s+/g, "_")}.pdf`;
-  pdf.save(nombreArchivo);
-};
    useEffect(() => {
 
     if (!propuesta || mostrarBienvenidaPropuesta) return;
@@ -1399,9 +1132,13 @@ const descargarPropuestaPDF = () => {
       }
 
       .propuesta-infantil .propuesta-hero-name {
-        font-size: clamp(4.6rem, 24vw, 6.3rem) !important;
+        font-size: clamp(2.2rem, 14vw, 6.3rem) !important;
         padding-top: 0.42em !important;
-        line-height: 1.34 !important;
+        line-height: 1.28 !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        max-width: 95vw !important;
+        text-align: center !important;
       }
 
       .banner-galeria-infantil img {
@@ -3209,43 +2946,6 @@ background:"#111",
       </div>
 
     ))}
-
-    {esEmpresas && (
-      <div
-        className="propuesta-tech-card"
-        style={{
-          borderColor: `rgba(197,160,89,0.5)`,
-          boxShadow: "0 18px 45px rgba(0,0,0,0.22)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer"
-        }}
-        onClick={descargarPropuestaPDF}
-      >
-        <div style={{ fontSize: "1.55rem", marginBottom: "18px" }}>📄</div>
-        <div style={{
-          fontSize: "0.68rem",
-          letterSpacing: "2px",
-          textTransform: "uppercase",
-          color: "rgba(255,255,255,0.48)",
-          marginBottom: "10px",
-          fontWeight: 700
-        }}>
-          Descargar
-        </div>
-        <strong style={{
-          display: "block",
-          fontSize: "1rem",
-          lineHeight: 1.25,
-          color: `rgba(197,160,89,1)`,
-          textAlign: "center"
-        }}>
-          Propuesta en PDF
-        </strong>
-      </div>
-    )}
 
   </div>
 
