@@ -7072,7 +7072,7 @@ setMesaActivaId(null);
         </main>
     </div> {/* editor-layout */}
   </div>
-{/* MODAL REGALO INFANTIL */}
+<>{/* MODAL REGALO INFANTIL */}
 {modalRegalo && (
   <div
     style={{
@@ -7165,7 +7165,7 @@ setMesaActivaId(null);
     </div>
   </div>
 )}
-
+</>
 );
 };    
   
