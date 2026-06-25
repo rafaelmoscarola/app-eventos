@@ -29,7 +29,6 @@ import React, {
   useCallback,
   useRef
 } from "react";
-import ReactDOM from "react-dom";
 
 /**
  * LUISINA BAGNAROLI - SISTEMA DE GESTIÓN DE EVENTOS 2026
@@ -763,8 +762,8 @@ const ModalRegalo = ({ abierto, onCerrar, nombreRegalo, setNombreRegalo, propReg
       mensajeCopiado: "Link de regalo copiado"
     });
   };
-  return ReactDOM.createPortal(
-    <div onClick={onCerrar} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", zIndex:99999, display:"flex", alignItems:"center", justifyContent:"center", padding:"20px" }}>
+  return (
+    <div onClick={onCerrar} style={{ position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(0,0,0,0.75)", zIndex:99999, display:"flex", alignItems:"center", justifyContent:"center", padding:"20px" }}>
       <div onClick={e => e.stopPropagation()} style={{ background:"linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)", borderRadius:"28px", padding:"36px 28px", maxWidth:"400px", width:"100%", border:"1.5px solid rgba(255,182,210,0.35)", boxShadow:"0 30px 80px rgba(0,0,0,0.6)", textAlign:"center" }}>
         <div style={{ fontSize:"3rem", marginBottom:"8px" }}>🎁</div>
         <h3 style={{ color:"#fff", fontSize:"1.4rem", fontFamily:"Brittany Signature, cursive", marginBottom:"6px" }}>
@@ -799,8 +798,7 @@ const ModalRegalo = ({ abierto, onCerrar, nombreRegalo, setNombreRegalo, propReg
           </button>
         </div>
       </div>
-    </div>,
-    document.body
+    </div>
   );
 };
 
