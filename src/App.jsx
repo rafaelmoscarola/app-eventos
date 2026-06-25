@@ -7072,9 +7072,6 @@ setMesaActivaId(null);
         </main>
     </div> {/* editor-layout */}
   </div>
-);
-};    
-  
 {/* MODAL REGALO INFANTIL */}
 {modalRegalo && (
   <div
@@ -7169,6 +7166,9 @@ setMesaActivaId(null);
   </div>
 )}
 
+);
+};    
+  
 const App = () => {
   return (
     <Routes>
