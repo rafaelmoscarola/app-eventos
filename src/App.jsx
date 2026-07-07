@@ -7750,7 +7750,7 @@ setMesaActivaId(null);
     </div> {/* editor-layout */}
 
   {/* Chatbot - solo en página pública */}
-  {!usuario && (
+  {!logueado && (
     <ChatbotWidget
       conocimiento={conocimientoChatbot}
       resenas={resenasPublicas}
