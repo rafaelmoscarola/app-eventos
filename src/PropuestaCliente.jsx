@@ -1388,9 +1388,12 @@ const descargarPropuestaPDF = () => {
       }
 
       .propuesta-hero-name {
-        font-size: clamp(3.1rem, 18vw, 5.2rem) !important;
-        line-height: 0.95 !important;
-        overflow-wrap: anywhere !important;
+        font-size: clamp(2.2rem, 14vw, 5.2rem) !important;
+        line-height: 1.1 !important;
+        overflow-wrap: break-word !important;
+        word-break: break-word !important;
+        max-width: 95vw !important;
+        text-align: center !important;
       }
 
       .propuesta-hero-frase {
