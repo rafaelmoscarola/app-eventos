@@ -996,8 +996,8 @@ const ChatbotWidget = ({ conocimiento, resenas }) => {
 
   // Animación de entrada
   React.useEffect(() => {
-    const t1 = setTimeout(() => setFaseEntrada("volando"), 3200);
-    const t2 = setTimeout(() => setFaseEntrada("chico"), 4000);
+    const t1 = setTimeout(() => setFaseEntrada("volando"), 5000);
+    const t2 = setTimeout(() => setFaseEntrada("chico"), 5800);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
@@ -1250,21 +1250,22 @@ REGLAS:
         {faseEntrada === "grande" && (
           <div style={{
             position: "fixed",
-            top: "50%",
+            top: "35%",
             left: "50%",
-            transform: "translate(-50%, -130px)",
+            transform: "translateX(-50%)",
             background: "#fff",
-            borderRadius: "18px",
-            padding: "14px 20px",
-            maxWidth: "85vw",
+            borderRadius: "20px",
+            padding: "22px 28px",
+            width: "min(290px, 80vw)",
             textAlign: "center",
-            boxShadow: "0 8px 28px rgba(0,0,0,0.15)",
+            boxShadow: "0 12px 40px rgba(0,0,0,0.18)",
             border: "1.5px solid rgba(197,160,89,0.4)",
             animation: "robotEntrada 0.5s ease 0.3s both",
             zIndex: 99999
           }}>
-            <div style={{ fontSize:"1rem", fontWeight:700, color:"#1a1a1a", marginBottom:"2px" }}>¡Hola! Soy Fiesty 🎉</div>
-            <div style={{ fontSize:"0.85rem", color:"#666" }}>Asistente de Luisi — ¿en qué te ayudo?</div>
+            <div style={{ fontSize:"2rem", marginBottom:"10px" }}>🎉</div>
+            <div style={{ fontSize:"1.1rem", fontWeight:800, color:"#1a1a1a", marginBottom:"8px" }}>¡Hola! Soy Fiesty</div>
+            <div style={{ fontSize:"0.88rem", color:"#555", lineHeight:1.6 }}>Asistente de Luisi 🤖<br/>en qué te puedo ayudar?</div>
           </div>
         )}
 
