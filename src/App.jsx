@@ -819,17 +819,34 @@ const MejoradorIA = ({ campo, valor, onAplicar, onCerrar }) => {
     setResultado("");
     try {
       const prompt = campo === "incluye"
-        ? `Sos asistente de Luisina Bagnaroli, diseñadora y productora de eventos en Argentina. Reescribí el siguiente texto del campo "Incluye" de una propuesta de evento de forma profesional, elegante y clara. Usá bullet points o numeración si tiene sentido. Mantené todos los detalles importantes. Escribí en español argentino formal.${instruccionExtra ? `
+        ? `Sos asistente de Luisina Bagnaroli, diseñadora y productora de eventos en Argentina.
 
-Instrucción adicional: ${instruccionExtra}` : ""}
+Tu tarea es tomar el texto que te proporciono y convertirlo en un LISTADO FORMAL de ítems para una propuesta de evento.
+Cada ítem debe estar numerado, con un título breve en negrita y una descripción corta de 1 a 2 líneas explicando en qué consiste ese elemento del servicio.
 
-Texto original:
+REGLAS ESTRICTAS:
+- Devolvé SOLO el listado numerado, sin saludos, introducciones, conclusiones ni texto adicional.
+- No agregues servicios ni detalles que no estén en el texto original.
+- No inventes información.
+- Escribí en español argentino formal.
+${instruccionExtra ? `\n\nAjuste adicional: ${instruccionExtra}` : ""}
+
+Texto a convertir:
 ${textoBase}`
-        : `Sos asistente de Luisina Bagnaroli, diseñadora y productora de eventos en Argentina. Reescribí el siguiente texto de "Observaciones" de una propuesta de evento de forma profesional, clara y cortés. Mantené todos los detalles. Escribí en español argentino formal.${instruccionExtra ? `
+        : `Sos asistente de Luisina Bagnaroli, diseñadora y productora de eventos en Argentina.
 
-Instrucción adicional: ${instruccionExtra}` : ""}
+Tu tarea es tomar el texto que te proporciono y redactarlo como OBSERVACIONES formales para una propuesta de evento.
+Las observaciones son aclaraciones, condiciones o notas importantes para el cliente: política de cancelación, condiciones de pago, limitaciones del servicio, consideraciones logísticas, etc.
 
-Texto original:
+REGLAS ESTRICTAS:
+- Devolvé SOLO el texto de observaciones, sin saludos, introducciones ni cierres.
+- Si hay varias observaciones, presentálas como ítems numerados.
+- No agregues condiciones ni detalles que no estén en el texto original.
+- No inventes información.
+- Escribí en español argentino formal.
+${instruccionExtra ? `\n\nAjuste adicional: ${instruccionExtra}` : ""}
+
+Texto a convertir:
 ${textoBase}`;
 
       const apiKey = import.meta.env.VITE_GROQ_KEY;
