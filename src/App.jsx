@@ -1299,7 +1299,6 @@ REGLAS:
         `}</style>
 
         {/* Texto de saludo - solo en fase grande */}
-        {null
 
         <div className="robot-wrap" style={{ position:"relative", width: faseEntrada === "grande" ? "160px" : "72px", height: faseEntrada === "grande" ? "196px" : "88px", transition: faseEntrada === "volando" ? "all 0.8s ease" : "none" }}>
 
