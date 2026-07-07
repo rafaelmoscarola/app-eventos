@@ -3647,7 +3647,7 @@ if (condiciones) {
 
             </div>
 
-            <CarruselResenas resenas={resenasPublicas.filter(r => r.publicada !== false)} />
+            <CarruselResenas resenas={resenasPublicas.filter(r => r.publicada === true || r.publicada === undefined || r.publicada === null)} />
 
           </div>
 
