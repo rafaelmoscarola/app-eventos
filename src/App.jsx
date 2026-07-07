@@ -979,6 +979,258 @@ ${textoBase}`;
   );
 };
 
+
+const ChatbotWidget = ({ conocimiento, resenas }) => {
+  const [abierto, setAbierto] = React.useState(false);
+  const [mensajes, setMensajes] = React.useState([]);
+  const [input, setInput] = React.useState("");
+  const [cargando, setCargando] = React.useState(false);
+  const [mostradoBurbuja, setMostradoBurbuja] = React.useState(false);
+  const [burbuja, setBurbuja] = React.useState(false);
+  const [convId] = React.useState(() => `conv_${Date.now()}_${Math.random().toString(36).slice(2)}`);
+  const endRef = React.useRef(null);
+
+  // Auto-open bubble after 4 seconds
+  React.useEffect(() => {
+    if (mostradoBurbuja) return;
+    const t = setTimeout(() => {
+      setBurbuja(true);
+      setMostradoBurbuja(true);
+    }, 4000);
+    return () => clearTimeout(t);
+  }, [mostradoBurbuja]);
+
+  // Scroll to bottom
+  React.useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [mensajes, cargando]);
+
+  const guardarConversacion = async (msgs) => {
+    try {
+      const { db: fireDb } = await import("./firebase");
+      const { setDoc, doc: fireDoc, collection: fireCol } = await import("firebase/firestore");
+      await setDoc(fireDoc(fireDb, "chatbot_conversaciones", convId), {
+        mensajes: msgs,
+        actualizada: Date.now(),
+        iniciada: msgs[0] ? msgs[0].ts : Date.now()
+      });
+    } catch(e) {}
+  };
+
+  const enviar = async () => {
+    const texto = input.trim();
+    if (!texto || cargando) return;
+    setInput("");
+
+    const nuevosMensajes = [...mensajes, { rol: "user", texto, ts: Date.now() }];
+    setMensajes(nuevosMensajes);
+    setCargando(true);
+
+    try {
+      const resenasTexto = resenas.slice(0, 8).map(r =>
+        `"${r.mensaje}" — ${r.nombre}${r.eventoTitulo ? ` (${r.eventoTitulo})` : ""}`
+      ).join("\n");
+
+      const conocimientoTexto = conocimiento.map(e => e.texto).join("\n");
+
+      const systemPrompt = `Sos el asistente virtual de Luisina Bagnaroli, empresa de diseño y producción de eventos en Gálvez, Santa Fe, Argentina. Hablás SIEMPRE como parte del equipo, usando "nosotros", "contamos con", "ofrecemos", "tenemos". Nunca decís "yo" ni te presentás como IA.
+
+QUIÉNES SOMOS:
+Somos Luisina y Rafael, más de 10 años en el sector. Luisina lidera el diseño creativo. Rafael se ocupa de fabricación, logística, montaje, marketing y tecnología. Nos apasiona lo que hacemos y eso se nota en cada evento.
+
+SERVICIOS:
+- Ambientación integral: casamientos, 15 años, cumpleaños, bautismos, comuniones, eventos empresariales, actos institucionales y municipales.
+- Alquiler de mobiliario completo: mesas redondas, sillas Tiffany, platos, vajillas, manteles, barra para eventos. Todo para fiestas de 30 a 50 personas en casa o salón.
+- Carpa beduina de gran tamaño para festejos al aire libre o en casa.
+- Escenografías y telones de gran formato. Decoraciones patrias. Espacios temáticos.
+- Diseño de vidrieras comerciales.
+- Equipo completo para eventos grandes: pantallas gigantes, bartender, gastronomía, contactos con salones.
+- Fabricación propia de piezas únicas en nuestro taller.
+
+ZONA: Gálvez y localidades aledañas.
+
+CONTACTO:
+Rafael: WhatsApp +54 3476 552562
+Luisina: WhatsApp +54 3404 597725
+Instagram: @armalocomoquieras
+
+CONOCIMIENTO ACTUALIZADO DEL NEGOCIO:
+${conocimientoTexto || "Sin actualizaciones recientes."}
+
+RESEÑAS REALES DE CLIENTES (podés citarlas textualmente si preguntan por calidad):
+${resenasTexto || "Sin reseñas disponibles aún."}
+
+ESTILO DE COMUNICACIÓN:
+- Cálido, entusiasta, gracioso y profesional al mismo tiempo
+- Español argentino informal (usá "vos", "che", "bárbaro", etc.)
+- Usá emojis con criterio — que sumen, no que molesten
+- Siempre terminá con UNA pregunta para entender mejor qué busca el cliente
+- Invitá a recorrer la galería y los comentarios de la página
+- Cuando el cliente quiere presupuesto o avanzar, derivá a WhatsApp
+- Temas delicados como clima o imprevistos: tratá con delicadeza y seriedad, pero podés hacer un comentario liviano con emoji. Ej: siempre recomendamos tener un plan B 😄 mejor estar preparados que mojar a los invitados
+
+EJEMPLOS DE TONO:
+Cliente: "¿son caros?"
+Vos: "Mirá, trabajamos para que cada presupuesto tenga su versión soñada 💛 No hay una respuesta única porque cada evento es diferente. Lo mejor es que nos contés qué tenés en mente y te armamos una propuesta a medida. ¿De qué tipo de festejo se trata?"
+
+Cliente: "quiero hacer mi fiesta afuera en septiembre"
+Vos: "¡Qué hermosa idea! Las fiestas al aire libre tienen una magia especial ✨🌿 Te cuento algo importante: en esa época el clima puede ser impredecible. Siempre recomendamos tener un plan B — nada dramático, pero es mejor bailar bajo las estrellas que bajo la lluvia 😄 ¿Ya tenés pensado el lugar?"
+
+Cliente: "¿tienen buenas referencias?"
+Vos: Citá una reseña real textualmente y comentá que son referentes en Gálvez con calificaciones 5 estrellas.
+
+REGLAS:
+- Nunca inventes servicios que no están en el conocimiento.
+- Si no sabés algo, decí "para más detalles te paso con el equipo" y derivá a WhatsApp.
+- Máximo 4-5 oraciones por respuesta. Conciso pero cálido.
+- Siempre cerrá con una pregunta.`;
+
+      const historial = nuevosMensajes.map(m => ({
+        role: m.rol === "user" ? "user" : "assistant",
+        content: m.texto
+      }));
+
+      const apiKey = import.meta.env.VITE_GROQ_KEY;
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "system", content: systemPrompt }, ...historial],
+          max_tokens: 350
+        })
+      });
+      const data = await res.json();
+      const respuesta = data.choices?.[0]?.message?.content || "Perdoná, tuve un problema. ¿Podés repetir tu pregunta? 😊";
+
+      const msgsFinales = [...nuevosMensajes, { rol: "bot", texto: respuesta, ts: Date.now() }];
+      setMensajes(msgsFinales);
+      guardarConversacion(msgsFinales);
+    } catch(e) {
+      const msgsError = [...nuevosMensajes, { rol: "bot", texto: "Perdoná, tuve un problema técnico. Podés escribirnos directamente por WhatsApp 💛", ts: Date.now() }];
+      setMensajes(msgsError);
+    }
+    setCargando(false);
+  };
+
+  const abrirChat = () => {
+    setAbierto(true);
+    setBurbuja(false);
+    if (mensajes.length === 0) {
+      setMensajes([{ rol: "bot", texto: "¡Hola! 👋 Somos el equipo de Luisina Bagnaroli, diseño y producción de eventos en Gálvez 🎉 Llevamos más de 10 años haciendo que cada celebración sea única e inolvidable. ¿Estás pensando en organizar algo especial? ¡Contame todo!", ts: Date.now() }]);
+    }
+  };
+
+  return (
+    <>
+      {/* Burbuja de enganche */}
+      {burbuja && !abierto && (
+        <div
+          onClick={abrirChat}
+          style={{ position:"fixed", bottom:"100px", right:"24px", zIndex:9998, background:"#fff", borderRadius:"20px 20px 4px 20px", padding:"14px 18px", boxShadow:"0 8px 30px rgba(0,0,0,0.18)", maxWidth:"260px", cursor:"pointer", border:"1.5px solid rgba(197,160,89,0.3)", animation:"slideInRight 0.4s ease" }}
+        >
+          <div style={{ fontSize:"0.88rem", color:"#1a1a1a", lineHeight:1.5 }}>
+            ✨ ¿Estás pensando en organizar un evento?
+          </div>
+          <div style={{ fontSize:"0.78rem", color:"#c5a059", marginTop:"4px", fontWeight:700 }}>
+            ¡Puedo ayudarte a imaginarlo! 🎉
+          </div>
+          <button
+            type="button"
+            onClick={e => { e.stopPropagation(); setBurbuja(false); }}
+            style={{ position:"absolute", top:"6px", right:"10px", background:"none", border:"none", color:"#aaa", cursor:"pointer", fontSize:"0.9rem" }}
+          >✕</button>
+        </div>
+      )}
+
+      {/* Botón flotante */}
+      <button
+        type="button"
+        onClick={abrirChat}
+        style={{ position:"fixed", bottom:"24px", right:"24px", zIndex:9999, width:"58px", height:"58px", borderRadius:"999px", border:"none", background:"linear-gradient(135deg, #d7b46a, #b88d3d)", boxShadow:"0 8px 28px rgba(197,160,89,0.45)", cursor:"pointer", fontSize:"1.5rem", display:"flex", alignItems:"center", justifyContent:"center" }}
+        title="Chateá con nosotros"
+      >
+        💬
+      </button>
+
+      {/* Panel de chat */}
+      {abierto && (
+        <div style={{ position:"fixed", bottom:"94px", right:"24px", zIndex:9999, width:"min(380px, calc(100vw - 32px))", height:"520px", background:"#fff", borderRadius:"24px", boxShadow:"0 20px 60px rgba(0,0,0,0.2)", display:"flex", flexDirection:"column", overflow:"hidden", border:"1px solid rgba(197,160,89,0.2)" }}>
+
+          {/* Header */}
+          <div style={{ background:"linear-gradient(135deg, #1a1a1a, #2d2d2d)", padding:"16px 18px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <div>
+              <div style={{ color:"#f2cf72", fontSize:"0.72rem", letterSpacing:"2px", textTransform:"uppercase", marginBottom:"2px" }}>Luisina Bagnaroli</div>
+              <div style={{ color:"#fff", fontSize:"0.9rem", fontWeight:700 }}>Diseño & Producción de Eventos</div>
+            </div>
+            <button type="button" onClick={() => setAbierto(false)} style={{ background:"none", border:"none", color:"rgba(255,255,255,0.6)", fontSize:"1.2rem", cursor:"pointer" }}>✕</button>
+          </div>
+
+          {/* Mensajes */}
+          <div style={{ flex:1, overflowY:"auto", padding:"16px", display:"flex", flexDirection:"column", gap:"10px" }}>
+            {mensajes.map((m, i) => (
+              <div key={i} style={{ display:"flex", justifyContent: m.rol === "user" ? "flex-end" : "flex-start" }}>
+                <div style={{
+                  maxWidth:"82%",
+                  padding:"10px 14px",
+                  borderRadius: m.rol === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                  background: m.rol === "user" ? "linear-gradient(135deg, #d7b46a, #b88d3d)" : "#f5f3ef",
+                  color: m.rol === "user" ? "#fff" : "#1a1a1a",
+                  fontSize:"0.88rem",
+                  lineHeight:1.6
+                }}>
+                  {m.texto}
+                </div>
+              </div>
+            ))}
+            {cargando && (
+              <div style={{ display:"flex", justifyContent:"flex-start" }}>
+                <div style={{ background:"#f5f3ef", borderRadius:"18px 18px 18px 4px", padding:"12px 16px", fontSize:"1rem", color:"#888" }}>
+                  ✦ ✦ ✦
+                </div>
+              </div>
+            )}
+            <div ref={endRef} />
+          </div>
+
+          {/* Input */}
+          <div style={{ padding:"12px", borderTop:"1px solid #f0ebe0", display:"flex", gap:"8px" }}>
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && !e.shiftKey && enviar()}
+              placeholder="Escribí tu consulta..."
+              style={{ flex:1, padding:"10px 14px", borderRadius:"999px", border:"1.5px solid #e8dfc8", fontSize:"0.88rem", fontFamily:"inherit", outline:"none" }}
+            />
+            <button
+              type="button"
+              onClick={enviar}
+              disabled={!input.trim() || cargando}
+              style={{ width:"40px", height:"40px", borderRadius:"999px", border:"none", background: input.trim() && !cargando ? "linear-gradient(135deg, #d7b46a, #b88d3d)" : "#e8dfc8", color: input.trim() && !cargando ? "#fff" : "#bbb", cursor: input.trim() && !cargando ? "pointer" : "default", fontSize:"1rem", display:"flex", alignItems:"center", justifyContent:"center" }}
+            >
+              ➤
+            </button>
+          </div>
+
+          {/* WhatsApp link */}
+          <div style={{ padding:"8px 12px 12px", textAlign:"center" }}>
+            <a href="https://wa.me/543476552562" target="_blank" rel="noreferrer" style={{ fontSize:"0.75rem", color:"#c5a059", textDecoration:"none", fontWeight:600 }}>
+              💬 Hablar directo por WhatsApp
+            </a>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slideInRight {
+          from { transform: translateX(20px); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `}</style>
+    </>
+  );
+};
+
 const AppContent = () => {
  const normalizarTexto = (texto) => {
   return texto
@@ -1115,6 +1367,12 @@ const [medioPagoRecibo, setMedioPagoRecibo] = useState("efectivo");
 const [observacionRecibo, setObservacionRecibo] = useState("");
 const [historialRecibosPropuestaId, setHistorialRecibosPropuestaId] = useState(null);
 const [resenasPublicas, setResenasPublicas] = useState([]);
+const [conocimientoChatbot, setConocimientoChatbot] = useState([]);
+const [nuevaEntradaChatbot, setNuevaEntradaChatbot] = useState("");
+const [editandoChatbotId, setEditandoChatbotId] = useState(null);
+const [editandoChatbotTexto, setEditandoChatbotTexto] = useState("");
+const [mostrarPanelChatbot, setMostrarPanelChatbot] = useState(false);
+const [guardandoChatbot, setGuardandoChatbot] = useState(false);
 const [mostrarResenasAdmin, setMostrarResenasAdmin] = useState(false);
 const [modalRegalo, setModalRegalo] = useState(false);
 const [nombreRegalo, setNombreRegalo] = useState("");
@@ -1504,6 +1762,15 @@ useEffect(() => {
 
   return () => unsubResenas();
 
+}, []);
+
+// Cargar conocimiento del chatbot
+useEffect(() => {
+  const q = query(collection(db, "chatbot_conocimiento"), orderBy("creada", "desc"));
+  const unsub = onSnapshot(q, snap => {
+    setConocimientoChatbot(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+  return () => unsub();
 }, []);
 
 
@@ -4031,6 +4298,127 @@ if (condiciones) {
               </div>
 
             )}
+
+            {/* ── PANEL CHATBOT ───────────────────────────────── */}
+            <div style={{ background:"#fff", padding:"28px", borderRadius:"24px", marginBottom:"32px", boxShadow:"0 10px 35px rgba(0,0,0,0.06)" }}>
+              <button
+                className="btn-luxury btn-outline"
+                style={{ width:"100%" }}
+                onClick={() => setMostrarPanelChatbot(prev => !prev)}
+              >
+                {mostrarPanelChatbot ? "Ocultar chatbot" : `🤖 Conocimiento del chatbot (${conocimientoChatbot.length} entradas)`}
+              </button>
+
+              {mostrarPanelChatbot && (
+                <div style={{ marginTop:"22px" }}>
+
+                  {/* Agregar entrada */}
+                  <div style={{ marginBottom:"20px" }}>
+                    <label style={{ fontSize:"0.75rem", letterSpacing:"2px", textTransform:"uppercase", color:"#888", display:"block", marginBottom:"8px" }}>
+                      Nueva entrada de conocimiento
+                    </label>
+                    <textarea
+                      className="input-field"
+                      style={{ height:"90px", marginBottom:"10px" }}
+                      placeholder="Ej: incorporamos manteles rojos · tenemos 6 mesas de 90x120 · descartamos las sillas blancas..."
+                      value={nuevaEntradaChatbot}
+                      onChange={e => setNuevaEntradaChatbot(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="btn-luxury"
+                      style={{ opacity: nuevaEntradaChatbot.trim() ? 1 : 0.5 }}
+                      disabled={!nuevaEntradaChatbot.trim() || guardandoChatbot}
+                      onClick={async () => {
+                        if (!nuevaEntradaChatbot.trim()) return;
+                        setGuardandoChatbot(true);
+                        await addDoc(collection(db, "chatbot_conocimiento"), {
+                          texto: nuevaEntradaChatbot.trim(),
+                          creada: Date.now()
+                        });
+                        setNuevaEntradaChatbot("");
+                        setGuardandoChatbot(false);
+                      }}
+                    >
+                      {guardandoChatbot ? "Guardando..." : "➕ Agregar al conocimiento"}
+                    </button>
+                  </div>
+
+                  {/* Lista de entradas */}
+                  {conocimientoChatbot.length === 0 ? (
+                    <p style={{ color:"#aaa", fontSize:"0.9rem" }}>Todavía no hay entradas. Empezá agregando información sobre tus servicios.</p>
+                  ) : (
+                    <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
+                      {conocimientoChatbot.map(entrada => (
+                        <div key={entrada.id} style={{ background:"#fafaf8", borderRadius:"14px", padding:"14px 16px", border:"1px solid #e8e0d0" }}>
+                          {editandoChatbotId === entrada.id ? (
+                            <div>
+                              <textarea
+                                className="input-field"
+                                style={{ height:"80px", marginBottom:"8px" }}
+                                value={editandoChatbotTexto}
+                                onChange={e => setEditandoChatbotTexto(e.target.value)}
+                              />
+                              <div style={{ display:"flex", gap:"8px" }}>
+                                <button
+                                  type="button"
+                                  className="btn-luxury"
+                                  style={{ fontSize:"0.75rem", padding:"8px 14px" }}
+                                  onClick={async () => {
+                                    await updateDoc(doc(db, "chatbot_conocimiento", entrada.id), { texto: editandoChatbotTexto.trim() });
+                                    setEditandoChatbotId(null);
+                                  }}
+                                >
+                                  Guardar
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn-luxury btn-outline"
+                                  style={{ fontSize:"0.75rem", padding:"8px 14px" }}
+                                  onClick={() => setEditandoChatbotId(null)}
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <p style={{ margin:"0 0 8px", fontSize:"0.9rem", color:"#333", lineHeight:1.6 }}>{entrada.texto}</p>
+                              <div style={{ fontSize:"0.72rem", color:"#aaa", marginBottom:"8px" }}>
+                                {new Date(entrada.creada).toLocaleDateString("es-AR", { day:"2-digit", month:"short", year:"numeric" })}
+                              </div>
+                              <div style={{ display:"flex", gap:"8px" }}>
+                                <button
+                                  type="button"
+                                  className="btn-luxury btn-outline"
+                                  style={{ fontSize:"0.72rem", padding:"6px 12px" }}
+                                  onClick={() => { setEditandoChatbotId(entrada.id); setEditandoChatbotTexto(entrada.texto); }}
+                                >
+                                  ✏️ Editar
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn-luxury btn-outline"
+                                  style={{ fontSize:"0.72rem", padding:"6px 12px", borderColor:"#e88", color:"#c44" }}
+                                  onClick={async () => {
+                                    if (window.confirm("¿Eliminar esta entrada?")) {
+                                      await deleteDoc(doc(db, "chatbot_conocimiento", entrada.id));
+                                    }
+                                  }}
+                                >
+                                  🗑 Eliminar
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* ── FIN PANEL CHATBOT ────────────────────────────── */}
 
             {mostrarPropuesta && (
 
@@ -7360,6 +7748,15 @@ setMesaActivaId(null);
         </div>
         </main>
     </div> {/* editor-layout */}
+
+  {/* Chatbot - solo en página pública */}
+  {!usuario && (
+    <ChatbotWidget
+      conocimiento={conocimientoChatbot}
+      resenas={resenasPublicas}
+    />
+  )}
+
   </div>
 );
 };    
