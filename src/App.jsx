@@ -4082,6 +4082,10 @@ if (condiciones) {
       </div>
     </div>
 
+    <div style={{ position:"fixed", bottom:"24px", right:"24px", zIndex:999999, width:"58px", height:"58px", borderRadius:"999px", background:"gold", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.5rem", cursor:"pointer" }} onClick={() => alert("chatbot!")}>
+      💬
+    </div>
+
     <ChatbotWidget
       conocimiento={conocimientoChatbot}
       resenas={resenasPublicas}
