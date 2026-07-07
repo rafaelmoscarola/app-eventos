@@ -3971,6 +3971,12 @@ if (condiciones) {
       </div>
     </section>
     <style>{"\n      @media (max-width: 860px) {\n        .inicio-publico-page {\n          width: 100% !important;\n          max-width: 100% !important;\n          overflow-x: hidden !important;\n        }\n\n        .inicio-publico-hero {\n          grid-template-columns: 1fr !important;\n          padding: 34px 22px 42px !important;\n          gap: 34px !important;\n          text-align: center !important;\n          justify-items: center !important;\n        }\n\n        .inicio-publico-hero-contenido {\n          max-width: 100% !important;\n          text-align: center !important;\n        }\n\n        .inicio-publico-hero-contenido h1,\n        .inicio-publico-hero-contenido h2,\n        .inicio-publico-hero-contenido p {\n          margin-left: auto !important;\n          margin-right: auto !important;\n          text-align: center !important;\n        }\n\n        .inicio-publico-acciones {\n          justify-content: center !important;\n          width: 100% !important;\n        }\n\n        .inicio-publico-acciones a,\n        .inicio-publico-acciones button,\n        .inicio-publico-contacto-final {\n          width: min(100%, 462px) !important;\n          justify-content: center !important;\n          text-align: center !important;\n        }\n\n        .inicio-publico-mosaico {\n          width: 100% !important;\n          max-width: 560px !important;\n          grid-template-columns: 1fr 1fr !important;\n          gap: 12px !important;\n        }\n\n        .inicio-publico-mosaico > div {\n          min-height: 178px !important;\n          border-radius: 20px !important;\n        }\n\n        .inicio-publico-mosaico > div:first-child {\n          grid-row: span 2 !important;\n          min-height: 368px !important;\n        }\n\n        .inicio-publico-mosaico > div:last-child {\n          grid-column: 1 / -1 !important;\n          min-height: 188px !important;\n        }\n\n        .inicio-publico-equipo {\n          grid-template-columns: 1fr !important;\n          gap: 38px !important;\n          text-align: center !important;\n        }\n\n        .inicio-publico-equipo h2,\n        .inicio-publico-equipo p {\n          text-align: center !important;\n          margin-left: auto !important;\n          margin-right: auto !important;\n        }\n\n        .inicio-publico-equipo-galeria {\n          grid-template-columns: 1fr !important;\n          max-width: 560px !important;\n          margin: 0 auto !important;\n          width: 100% !important;\n        }\n\n        .inicio-publico-equipo-galeria > div:first-child {\n          min-height: 360px !important;\n          border-radius: 24px !important;\n        }\n\n        .inicio-publico-equipo-mini {\n          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;\n        }\n\n        .inicio-publico-equipo-mini > div {\n          min-height: 170px !important;\n          grid-column: span 1 !important;\n          border-radius: 18px !important;\n        }\n\n        .inicio-publico-equipo-mini > div:last-child:nth-child(odd) {\n          grid-column: 1 / -1 !important;\n          min-height: 220px !important;\n        }\n\n        .inicio-publico-emociones {\n          grid-template-columns: 1fr !important;\n          gap: 14px !important;\n        }\n\n        .inicio-publico-emociones > div {\n          min-height: 250px !important;\n          grid-row: auto !important;\n          border-radius: 20px !important;\n        }\n\n        .inicio-publico-resenas {\n          width: 100% !important;\n          max-width: 100% !important;\n          overflow: hidden !important;\n          text-align: center !important;\n          padding: 28px 16px !important;\n          border-radius: 26px !important;\n        }\n\n        .inicio-publico-resenas-lista {\n          width: 100% !important;\n          max-width: 100% !important;\n          overflow-x: auto !important;\n          padding: 4px 0 18px !important;\n        }\n\n        .inicio-publico-resena-card {\n          flex: 0 0 min(100%, calc(100vw - 64px)) !important;\n          min-width: 0 !important;\n          max-width: calc(100vw - 64px) !important;\n          padding: 22px !important;\n          text-align: left !important;\n          overflow: hidden !important;\n        }\n\n        .inicio-publico-resena-card,\n        .inicio-publico-resena-card * {\n          overflow-wrap: anywhere !important;\n          word-break: break-word !important;\n          white-space: normal !important;\n        }\n      }\n"}</style>
+
+  <ChatbotWidget
+    conocimiento={conocimientoChatbot}
+    resenas={resenasPublicas}
+  />
+
   </div>
   
 );
@@ -4081,15 +4087,6 @@ if (condiciones) {
         </button>
       </div>
     </div>
-
-    <div style={{ position:"fixed", bottom:"24px", right:"24px", zIndex:999999, width:"58px", height:"58px", borderRadius:"999px", background:"gold", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.5rem", cursor:"pointer" }} onClick={() => alert("chatbot!")}>
-      💬
-    </div>
-
-    <ChatbotWidget
-      conocimiento={conocimientoChatbot}
-      resenas={resenasPublicas}
-    />
 
   );
 }
