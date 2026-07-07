@@ -3608,7 +3608,7 @@ if (condiciones) {
           </p>
         </div>
 
-        {resenasPublicas.filter(resena => resena.publicada !== false).length > 0 && (
+        {resenasPublicas.filter(r => r.publicada === true || r.publicada === undefined || r.publicada === null).length > 0 && (
 
           <div className="inicio-publico-resenas" style={{
             margin: "54px auto 34px",
