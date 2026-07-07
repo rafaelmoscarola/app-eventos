@@ -1214,6 +1214,34 @@ REGLAS:
         </div>
       )}
 
+      {/* Globo de saludo - completamente independiente, parte inferior centrado */}
+      {faseEntrada === "grande" && (
+        <div style={{
+          position: "fixed",
+          bottom: "40px",
+          left: "0",
+          right: "0",
+          display: "flex",
+          justifyContent: "center",
+          zIndex: 99999,
+          animation: "robotEntrada 0.5s ease 0.4s both",
+          pointerEvents: "none"
+        }}>
+          <div style={{
+            background: "#fff",
+            borderRadius: "20px",
+            padding: "16px 22px",
+            width: "min(260px, 76vw)",
+            textAlign: "center",
+            boxShadow: "0 12px 40px rgba(0,0,0,0.18)",
+            border: "1.5px solid rgba(197,160,89,0.4)"
+          }}>
+            <div style={{ fontSize:"1rem", fontWeight:800, color:"#1a1a1a", marginBottom:"4px" }}>¡Hola! Soy Fiesty 🤖</div>
+            <div style={{ fontSize:"0.84rem", color:"#555", lineHeight:1.5 }}>Asistente de Luisi<br/>¿en qué te puedo ayudar?</div>
+          </div>
+        </div>
+      )}
+
       {/* Robot flotante */}
       <div
         onClick={abrirChat}
@@ -1271,26 +1299,7 @@ REGLAS:
         `}</style>
 
         {/* Texto de saludo - solo en fase grande */}
-        {faseEntrada === "grande" && (
-          <div style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, 110px)",
-            background: "#fff",
-            borderRadius: "20px",
-            padding: "16px 20px",
-            width: "min(240px, 72vw)",
-            textAlign: "center",
-            boxShadow: "0 12px 40px rgba(0,0,0,0.18)",
-            border: "1.5px solid rgba(197,160,89,0.4)",
-            animation: "robotEntrada 0.5s ease 0.3s both",
-            zIndex: 99999
-          }}>
-            <div style={{ fontSize:"0.95rem", fontWeight:800, color:"#1a1a1a", marginBottom:"4px" }}>¡Hola! Soy Fiesty 🤖</div>
-            <div style={{ fontSize:"0.82rem", color:"#555", lineHeight:1.5 }}>Asistente de Luisi<br/>¿en qué te ayudo?</div>
-          </div>
-        )}
+        {false && null
 
         <div className="robot-wrap" style={{ position:"relative", width: faseEntrada === "grande" ? "160px" : "72px", height: faseEntrada === "grande" ? "196px" : "88px", transition: faseEntrada === "volando" ? "all 0.8s ease" : "none" }}>
 
