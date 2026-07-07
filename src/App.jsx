@@ -747,6 +747,66 @@ const GaleriaInicio = ({ categorias, todasLasImagenes }) => {
 };
 // ── FIN COMPONENTE GALERÍA INICIO ────────────────────────────────────────
 
+const CarruselResenas = ({ resenas }) => {
+  const listaRef = React.useRef(null);
+  const [idxActivo, setIdxActivo] = React.useState(0);
+  const total = resenas.length;
+
+  React.useEffect(() => {
+    const el = listaRef.current;
+    if (!el || total <= 1) return;
+    const intervalo = setInterval(() => {
+      const cardW = el.scrollWidth / total;
+      const current = Math.round(el.scrollLeft / cardW);
+      const next = (current + 1) % total;
+      el.scrollTo({ left: next * cardW, behavior: "smooth" });
+      setIdxActivo(next);
+    }, 3500);
+    return () => clearInterval(intervalo);
+  }, [total]);
+
+  const scrollTo = (dir) => {
+    const el = listaRef.current;
+    if (!el || total === 0) return;
+    const cardW = el.scrollWidth / total;
+    const current = Math.round(el.scrollLeft / cardW);
+    const next = Math.max(0, Math.min(total - 1, current + dir));
+    el.scrollTo({ left: next * cardW, behavior: "smooth" });
+    setIdxActivo(next);
+  };
+
+  if (total === 0) return null;
+
+  return (
+    <div style={{ position:"relative", padding:"0 24px" }}>
+      {total > 1 && (
+        <button type="button" onClick={() => scrollTo(-1)} style={{ position:"absolute", left:"0", top:"45%", transform:"translateY(-50%)", zIndex:2, background:"#fff", border:"1.5px solid rgba(197,160,89,0.4)", borderRadius:"999px", width:"38px", height:"38px", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", boxShadow:"0 4px 14px rgba(0,0,0,0.1)", fontSize:"0.9rem", color:"#c5a059" }}>◀</button>
+      )}
+      {total > 1 && (
+        <button type="button" onClick={() => scrollTo(1)} style={{ position:"absolute", right:"0", top:"45%", transform:"translateY(-50%)", zIndex:2, background:"#fff", border:"1.5px solid rgba(197,160,89,0.4)", borderRadius:"999px", width:"38px", height:"38px", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", boxShadow:"0 4px 14px rgba(0,0,0,0.1)", fontSize:"0.9rem", color:"#c5a059" }}>▶</button>
+      )}
+      <div ref={listaRef} style={{ display:"flex", gap:"18px", overflowX:"auto", padding:"4px 2px 18px", scrollSnapType:"x mandatory", scrollbarWidth:"none", msOverflowStyle:"none" }}>
+        {resenas.map(resena => (
+          <article className="inicio-publico-resena-card" key={resena.id} style={{ minWidth:"min(390px, 86vw)", scrollSnapAlign:"start", background:"#fff", border:"1px solid rgba(197,160,89,0.22)", borderRadius:"24px", padding:"26px", flexShrink:0 }}>
+            <div style={{ display:"flex", gap:"3px", marginBottom:"12px" }}>
+              {[...Array(resena.estrellas || 5)].map((_,i) => <span key={i} style={{ color:"#c5a059", fontSize:"1.1rem" }}>⭐</span>)}
+            </div>
+            <p style={{ fontSize:"0.97rem", lineHeight:1.65, color:"#3a3a3a", margin:"0 0 18px", fontStyle:"italic" }}>"{resena.comentario}"</p>
+            <strong style={{ fontSize:"0.85rem", color:"#1a1a1a", letterSpacing:"0.5px" }}>{resena.nombre}</strong>
+          </article>
+        ))}
+      </div>
+      {total > 1 && (
+        <div style={{ display:"flex", justifyContent:"center", gap:"7px", marginTop:"4px" }}>
+          {resenas.map((_,i) => (
+            <button key={i} type="button" onClick={() => { const el = listaRef.current; if (!el) return; el.scrollTo({ left:(el.scrollWidth/total)*i, behavior:"smooth" }); setIdxActivo(i); }} style={{ width:i===idxActivo?"22px":"7px", height:"7px", borderRadius:"999px", border:"none", background:i===idxActivo?"#c5a059":"rgba(197,160,89,0.3)", padding:0, cursor:"pointer", transition:"all 0.3s ease" }} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const AppContent = () => {
  const normalizarTexto = (texto) => {
   return texto
@@ -3438,71 +3498,7 @@ if (condiciones) {
 
             </div>
 
-            <div className="inicio-publico-resenas-lista" style={{
-              display: "flex",
-              gap: "18px",
-              overflowX: "auto",
-              padding: "4px 2px 18px",
-              scrollSnapType: "x mandatory"
-            }}>
-
-              {resenasPublicas
-                .filter(resena => resena.publicada !== false)
-                .map(resena => (
-
-                  <article
-                    className="inicio-publico-resena-card"
-                    key={resena.id}
-                    style={{
-                      minWidth: "min(390px, 86vw)",
-                      scrollSnapAlign: "start",
-                      background: "#fff",
-                      border: "1px solid rgba(197,160,89,0.22)",
-                      borderRadius: "24px",
-                      padding: "26px",
-                      boxShadow: "0 16px 34px rgba(0,0,0,0.08)"
-                    }}
-                  >
-
-                    <div style={{
-                      color: "#c5a059",
-                      fontSize: "1.25rem",
-                      letterSpacing: "3px",
-                      marginBottom: "12px",
-                      textShadow: "0 0 16px rgba(197,160,89,0.34)"
-                    }}>
-                      {"★".repeat(Math.max(1, Math.round(resena.promedio || 5)))}
-                    </div>
-
-                    <div style={{
-                      fontSize: "0.72rem",
-                      letterSpacing: "2px",
-                      textTransform: "uppercase",
-                      color: "#a3844a",
-                      fontWeight: 800,
-                      marginBottom: "12px"
-                    }}>
-                      {resena.eventoTitulo || "Evento"}
-                    </div>
-
-                    <p style={{
-                      fontSize: "1rem",
-                      lineHeight: 1.75,
-                      color: "#333",
-                      margin: "0 0 18px"
-                    }}>
-                      “{resena.mensaje}”
-                    </p>
-
-                    <strong style={{ color: "#111" }}>
-                      {resena.nombre}
-                    </strong>
-
-                  </article>
-
-              ))}
-
-            </div>
+            <CarruselResenas resenas={resenasPublicas.filter(r => r.publicada !== false)} />
 
           </div>
 
