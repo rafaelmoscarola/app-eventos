@@ -791,7 +791,7 @@ const CarruselResenas = ({ resenas }) => {
             <div style={{ display:"flex", gap:"3px", marginBottom:"12px" }}>
               {[...Array(resena.estrellas || 5)].map((_,i) => <span key={i} style={{ color:"#c5a059", fontSize:"1.1rem" }}>⭐</span>)}
             </div>
-            <p style={{ fontSize:"0.97rem", lineHeight:1.65, color:"#3a3a3a", margin:"0 0 18px", fontStyle:"italic" }}>"{resena.comentario}"</p>
+            <p style={{ fontSize:"0.97rem", lineHeight:1.65, color:"#3a3a3a", margin:"0 0 18px", fontStyle:"italic" }}>"{resena.mensaje}"</p>
             <strong style={{ fontSize:"0.85rem", color:"#1a1a1a", letterSpacing:"0.5px" }}>{resena.nombre}</strong>
           </article>
         ))}
