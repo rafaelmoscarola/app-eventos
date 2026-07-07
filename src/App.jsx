@@ -832,19 +832,21 @@ Instrucción adicional: ${instruccionExtra}` : ""}
 Texto original:
 ${textoBase}`;
 
-      const apiKey = import.meta.env.VITE_GEMINI_KEY;
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
-          })
-        }
-      );
+      const apiKey = import.meta.env.VITE_GROQ_KEY;
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: prompt }],
+          max_tokens: 1000
+        })
+      });
       const data = await res.json();
-      const texto = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const texto = data.choices?.[0]?.message?.content || "";
       setResultado(texto.trim());
     } catch (e) {
       setResultado("Error al conectar con la IA. Intentá de nuevo.");
