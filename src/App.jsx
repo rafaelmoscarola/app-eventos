@@ -988,6 +988,7 @@ const ChatbotWidget = ({ conocimiento, resenas }) => {
   const [mostradoBurbuja, setMostradoBurbuja] = React.useState(false);
   const [burbuja, setBurbuja] = React.useState(false);
   const [convId] = React.useState(() => `conv_${Date.now()}_${Math.random().toString(36).slice(2)}`);
+  const [leadEnviado, setLeadEnviado] = React.useState(false);
   const endRef = React.useRef(null);
 
   // Auto-open bubble after 4 seconds
@@ -1083,7 +1084,8 @@ REGLAS:
 - Nunca inventes servicios que no están en el conocimiento.
 - Si no sabés algo, decí "para más detalles te paso con el equipo" y derivá a WhatsApp.
 - Máximo 4-5 oraciones por respuesta. Conciso pero cálido.
-- Siempre cerrá con una pregunta.`;
+- Siempre cerrá con una pregunta.
+- IMPORTANTE: cuando el cliente muestre interés concreto en contratar o pedir presupuesto, pedile su nombre y número de teléfono o WhatsApp. Decí algo como: "¡Me encanta! Para que el equipo pueda contactarte, ¿me dejás tu nombre y un número de teléfono o WhatsApp?" Una vez que tengas esos datos, confirmá que le van a escribir a la brevedad.`;
 
       const historial = nuevosMensajes.map(m => ({
         role: m.rol === "user" ? "user" : "assistant",
@@ -1106,6 +1108,33 @@ REGLAS:
       const msgsFinales = [...nuevosMensajes, { rol: "bot", texto: respuesta, ts: Date.now() }];
       setMensajes(msgsFinales);
       guardarConversacion(msgsFinales);
+
+      // Detección de lead: buscar nombre + teléfono en toda la conversación
+      if (!leadEnviado) {
+        const textoConversacion = msgsFinales
+          .filter(m => m.rol === "user")
+          .map(m => m.texto)
+          .join(" ");
+        const tieneNumero = /[0-9]{6,}/.test(textoConversacion.replace(/\s/g, ""));
+        const palabras = textoConversacion.trim().split(/\s+/);
+        const tieneNombre = palabras.length >= 2;
+        if (tieneNumero && tieneNombre) {
+          setLeadEnviado(true);
+          const resumenConversacion = msgsFinales
+            .map(m => (m.rol === "user" ? "👤 Visitante: " : "🤖 Bot: ") + m.texto)
+            .join("\n\n");
+          try {
+            await fetch("https://script.google.com/macros/s/AKfycby5CkFjU8Z0t8ZJodrJRfxs5RCSdPPaaz6FWjNHKlIuL_uzNdjFDc1cLFTKeZgrb8bk6A/exec", {
+              method: "POST",
+              body: JSON.stringify({
+                cuerpo: "Nuevo lead desde el chatbot de luisinabagnaroli.com.ar\n\n" +
+                  "Fecha: " + new Date().toLocaleString("es-AR") + "\n\n" +
+                  "=== CONVERSACIÓN ===\n\n" + resumenConversacion
+              })
+            });
+          } catch(mailErr) {}
+        }
+      }
     } catch(e) {
       const msgsError = [...nuevosMensajes, { rol: "bot", texto: "Perdoná, tuve un problema técnico. Podés escribirnos directamente por WhatsApp 💛", ts: Date.now() }];
       setMensajes(msgsError);
