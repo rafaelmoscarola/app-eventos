@@ -989,7 +989,25 @@ const ChatbotWidget = ({ conocimiento, resenas }) => {
   const [burbuja, setBurbuja] = React.useState(false);
   const [convId] = React.useState(() => `conv_${Date.now()}_${Math.random().toString(36).slice(2)}`);
   const [leadEnviado, setLeadEnviado] = React.useState(false);
+  const [objetoIdx, setObjetoIdx] = React.useState(0);
+  const objetos = ["🎂","📸","🎊","💐","🥂","🎈","✨"];
+  const [faseEntrada, setFaseEntrada] = React.useState("grande"); // grande | volando | chico
   const endRef = React.useRef(null);
+
+  // Animación de entrada
+  React.useEffect(() => {
+    const t1 = setTimeout(() => setFaseEntrada("volando"), 3200);
+    const t2 = setTimeout(() => setFaseEntrada("chico"), 4000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
+  // Ciclo de objetos del robot
+  React.useEffect(() => {
+    const t = setInterval(() => {
+      setObjetoIdx(i => (i + 1) % objetos.length);
+    }, 2500);
+    return () => clearInterval(t);
+  }, []);
 
   // Auto-open bubble after 4 seconds
   React.useEffect(() => {
@@ -1156,7 +1174,7 @@ REGLAS:
       {burbuja && !abierto && (
         <div
           onClick={abrirChat}
-          style={{ position:"fixed", bottom:"100px", right:"24px", zIndex:9998, background:"#fff", borderRadius:"20px 20px 4px 20px", padding:"14px 18px", boxShadow:"0 8px 30px rgba(0,0,0,0.18)", maxWidth:"260px", cursor:"pointer", border:"1.5px solid rgba(197,160,89,0.3)", animation:"slideInRight 0.4s ease" }}
+          style={{ position:"fixed", bottom:"120px", right:"20px", zIndex:9998, background:"#fff", borderRadius:"20px 20px 4px 20px", padding:"14px 18px", boxShadow:"0 8px 30px rgba(0,0,0,0.18)", maxWidth:"260px", cursor:"pointer", border:"1.5px solid rgba(197,160,89,0.3)", animation:"slideInRight 0.4s ease" }}
         >
           <div style={{ fontSize:"0.88rem", color:"#1a1a1a", lineHeight:1.5 }}>
             ✨ ¿Estás pensando en organizar un evento?
@@ -1172,15 +1190,142 @@ REGLAS:
         </div>
       )}
 
-      {/* Botón flotante */}
-      <button
-        type="button"
+      {/* Robot flotante */}
+      <div
         onClick={abrirChat}
-        style={{ position:"fixed", bottom:"24px", right:"24px", zIndex:9999, width:"58px", height:"58px", borderRadius:"999px", border:"none", background:"linear-gradient(135deg, #d7b46a, #b88d3d)", boxShadow:"0 8px 28px rgba(197,160,89,0.45)", cursor:"pointer", fontSize:"1.5rem", display:"flex", alignItems:"center", justifyContent:"center" }}
         title="Chateá con nosotros"
+        style={{
+          position: "fixed",
+          zIndex: 9999,
+          cursor: "pointer",
+          userSelect: "none",
+          ...(faseEntrada === "grande" ? {
+            bottom: "50%",
+            right: "50%",
+            transform: "translate(50%, 50%)",
+            transition: "none"
+          } : faseEntrada === "volando" ? {
+            bottom: "16px",
+            right: "20px",
+            transform: "scale(0.4)",
+            transition: "all 0.8s cubic-bezier(0.4, 0, 0.2, 1)"
+          } : {
+            bottom: "16px",
+            right: "20px",
+            transform: "scale(1)",
+            transition: "transform 0.3s ease"
+          })
+        }}
       >
-        💬
-      </button>
+        <style>{`
+          @keyframes floatRobot {
+            0%,100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+          }
+          @keyframes blinkEye {
+            0%,90%,100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+          }
+          @keyframes objetoAppear {
+            0% { opacity:0; transform: scale(0.5) translateY(4px); }
+            100% { opacity:1; transform: scale(1) translateY(0); }
+          }
+          @keyframes waveArm {
+            0%,100% { transform: rotate(0deg); transform-origin: top center; }
+            25% { transform: rotate(-25deg); transform-origin: top center; }
+            75% { transform: rotate(15deg); transform-origin: top center; }
+          }
+          @keyframes robotEntrada {
+            0% { opacity:0; transform: translateY(60px) scale(0.7); }
+            100% { opacity:1; transform: translateY(0) scale(1); }
+          }
+          .robot-wrap { animation: ${faseEntrada === "chico" ? "floatRobot 2.8s ease-in-out infinite" : "robotEntrada 0.6s ease"}; }
+          .robot-eye { animation: blinkEye 3.5s ease-in-out infinite; transform-origin: center; }
+          .robot-eye-r { animation: blinkEye 3.5s ease-in-out infinite 0.15s; transform-origin: center; }
+          .robot-objeto { animation: objetoAppear 0.4s ease; }
+          .robot-arm-l { animation: ${faseEntrada === "grande" ? "waveArm 0.7s ease-in-out 3" : "none"}; transform-origin: 6px 58px; }
+        `}</style>
+
+        {/* Texto de saludo - solo en fase grande */}
+        {faseEntrada === "grande" && (
+          <div style={{
+            position: "absolute",
+            top: "-70px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "#fff",
+            borderRadius: "18px 18px 18px 4px",
+            padding: "12px 18px",
+            whiteSpace: "nowrap",
+            boxShadow: "0 8px 28px rgba(0,0,0,0.15)",
+            border: "1.5px solid rgba(197,160,89,0.4)",
+            animation: "robotEntrada 0.5s ease 0.3s both"
+          }}>
+            <div style={{ fontSize:"0.95rem", fontWeight:700, color:"#1a1a1a", marginBottom:"2px" }}>¡Hola! Soy el asistente virtual 👋</div>
+            <div style={{ fontSize:"0.82rem", color:"#666" }}>del equipo de Luisina Bagnaroli</div>
+          </div>
+        )}
+
+        <div className="robot-wrap" style={{ position:"relative", width: faseEntrada === "grande" ? "160px" : "72px", height: faseEntrada === "grande" ? "196px" : "88px", transition: faseEntrada === "volando" ? "all 0.8s ease" : "none" }}>
+
+          {/* Objeto que sostiene */}
+          <div className="robot-objeto" key={objetoIdx} style={{ position:"absolute", top:"-18px", left:"50%", transform:"translateX(-50%)", fontSize:"1.3rem", lineHeight:1 }}>
+            {objetos[objetoIdx]}
+          </div>
+
+          <svg width={faseEntrada === "grande" ? "160" : "72"} height={faseEntrada === "grande" ? "196" : "88"} viewBox="0 0 72 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+            {/* Antena */}
+            <line x1="36" y1="8" x2="36" y2="16" stroke="#c5a059" strokeWidth="2.5" strokeLinecap="round"/>
+            <circle cx="36" cy="6" r="4" fill="#d7b46a"/>
+
+            {/* Cabeza */}
+            <rect x="14" y="16" width="44" height="34" rx="14" fill="#f0f0f0"/>
+            <rect x="16" y="18" width="40" height="30" rx="12" fill="#1a1a2e"/>
+
+            {/* Ojos */}
+            <g className="robot-eye">
+              <ellipse cx="26" cy="33" rx="5.5" ry="6" fill="#5dd4f0"/>
+              <circle cx="26" cy="33" r="2.5" fill="#1a8fb5"/>
+              <circle cx="27.2" cy="31.5" r="1.2" fill="#fff" opacity="0.8"/>
+            </g>
+            <g className="robot-eye-r">
+              <ellipse cx="46" cy="33" rx="5.5" ry="6" fill="#5dd4f0"/>
+              <circle cx="46" cy="33" r="2.5" fill="#1a8fb5"/>
+              <circle cx="47.2" cy="31.5" r="1.2" fill="#fff" opacity="0.8"/>
+            </g>
+
+            {/* Boca sonriente */}
+            <path d="M28 41 Q36 46 44 41" stroke="#5dd4f0" strokeWidth="2" strokeLinecap="round" fill="none"/>
+
+            {/* Cuello */}
+            <rect x="30" y="50" width="12" height="6" rx="3" fill="#d7b46a"/>
+
+            {/* Cuerpo */}
+            <rect x="10" y="56" width="52" height="30" rx="16" fill="#e8e8e8"/>
+            <rect x="14" y="60" width="44" height="22" rx="12" fill="#d0d0d0"/>
+
+            {/* Panel pecho */}
+            <rect x="22" y="63" width="28" height="14" rx="7" fill="#1a1a2e"/>
+            <circle cx="30" cy="70" r="3" fill="#d7b46a"/>
+            <circle cx="36" cy="70" r="3" fill="#5dd4f0"/>
+            <circle cx="42" cy="70" r="3" fill="#d7b46a"/>
+
+            {/* Brazos */}
+            <rect className="robot-arm-l" x="0" y="58" width="12" height="20" rx="6" fill="#e8e8e8"/>
+            <rect x="60" y="58" width="12" height="20" rx="6" fill="#e8e8e8"/>
+
+            {/* Manitos */}
+            <circle cx="6" cy="80" r="5" fill="#d0d0d0"/>
+            <circle cx="66" cy="80" r="5" fill="#d0d0d0"/>
+
+          </svg>
+
+          {/* Sombra */}
+          <div style={{ width:"40px", height:"6px", background:"rgba(0,0,0,0.12)", borderRadius:"50%", margin:"0 auto", filter:"blur(3px)" }}/>
+
+        </div>
+      </div>
 
       {/* Panel de chat */}
       {abierto && (
