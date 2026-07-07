@@ -1249,20 +1249,22 @@ REGLAS:
         {/* Texto de saludo - solo en fase grande */}
         {faseEntrada === "grande" && (
           <div style={{
-            position: "absolute",
-            top: "-70px",
+            position: "fixed",
+            top: "50%",
             left: "50%",
-            transform: "translateX(-50%)",
+            transform: "translate(-50%, -130px)",
             background: "#fff",
-            borderRadius: "18px 18px 18px 4px",
-            padding: "12px 18px",
-            whiteSpace: "nowrap",
+            borderRadius: "18px",
+            padding: "14px 20px",
+            maxWidth: "85vw",
+            textAlign: "center",
             boxShadow: "0 8px 28px rgba(0,0,0,0.15)",
             border: "1.5px solid rgba(197,160,89,0.4)",
-            animation: "robotEntrada 0.5s ease 0.3s both"
+            animation: "robotEntrada 0.5s ease 0.3s both",
+            zIndex: 99999
           }}>
-            <div style={{ fontSize:"0.95rem", fontWeight:700, color:"#1a1a1a", marginBottom:"2px" }}>¡Hola! Soy el asistente virtual 👋</div>
-            <div style={{ fontSize:"0.82rem", color:"#666" }}>del equipo de Luisina Bagnaroli</div>
+            <div style={{ fontSize:"1rem", fontWeight:700, color:"#1a1a1a", marginBottom:"2px" }}>¡Hola! Soy Fiesty 🎉</div>
+            <div style={{ fontSize:"0.85rem", color:"#666" }}>Asistente de Luisi — ¿en qué te ayudo?</div>
           </div>
         )}
 
