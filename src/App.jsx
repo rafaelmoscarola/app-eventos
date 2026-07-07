@@ -750,20 +750,21 @@ const GaleriaInicio = ({ categorias, todasLasImagenes }) => {
 const CarruselResenas = ({ resenas }) => {
   const listaRef = React.useRef(null);
   const [idxActivo, setIdxActivo] = React.useState(0);
+  const [pausado, setPausado] = React.useState(false);
   const total = resenas.length;
 
   React.useEffect(() => {
     const el = listaRef.current;
-    if (!el || total <= 1) return;
+    if (!el || total <= 1 || pausado) return;
     const intervalo = setInterval(() => {
       const cardW = el.scrollWidth / total;
       const current = Math.round(el.scrollLeft / cardW);
       const next = (current + 1) % total;
       el.scrollTo({ left: next * cardW, behavior: "smooth" });
       setIdxActivo(next);
-    }, 3500);
+    }, 4500);
     return () => clearInterval(intervalo);
-  }, [total]);
+  }, [total, pausado]);
 
   const scrollTo = (dir) => {
     const el = listaRef.current;
@@ -785,14 +786,41 @@ const CarruselResenas = ({ resenas }) => {
       {total > 1 && (
         <button type="button" onClick={() => scrollTo(1)} style={{ position:"absolute", right:"0", top:"45%", transform:"translateY(-50%)", zIndex:2, background:"#fff", border:"1.5px solid rgba(197,160,89,0.4)", borderRadius:"999px", width:"38px", height:"38px", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", boxShadow:"0 4px 14px rgba(0,0,0,0.1)", fontSize:"0.9rem", color:"#c5a059" }}>▶</button>
       )}
-      <div ref={listaRef} style={{ display:"flex", gap:"18px", overflowX:"auto", padding:"4px 2px 18px", scrollSnapType:"x mandatory", scrollbarWidth:"none", msOverflowStyle:"none" }}>
+      <div
+        ref={listaRef}
+        onMouseEnter={() => setPausado(true)}
+        onMouseLeave={() => setPausado(false)}
+        onTouchStart={() => setPausado(true)}
+        onTouchEnd={() => setTimeout(() => setPausado(false), 4000)}
+        style={{ display:"flex", gap:"18px", overflowX:"auto", padding:"4px 2px 18px", scrollSnapType:"x mandatory", scrollbarWidth:"none", msOverflowStyle:"none" }}
+      >
         {resenas.map(resena => (
-          <article className="inicio-publico-resena-card" key={resena.id} style={{ minWidth:"min(390px, 86vw)", scrollSnapAlign:"start", background:"#fff", border:"1px solid rgba(197,160,89,0.22)", borderRadius:"24px", padding:"26px", flexShrink:0 }}>
-            <div style={{ display:"flex", gap:"3px", marginBottom:"12px" }}>
-              {[...Array(resena.estrellas || 5)].map((_,i) => <span key={i} style={{ color:"#c5a059", fontSize:"1.1rem" }}>⭐</span>)}
+          <article
+            className="inicio-publico-resena-card"
+            key={resena.id}
+            style={{
+              minWidth:"min(320px, 82vw)",
+              maxWidth:"340px",
+              scrollSnapAlign:"start",
+              background:"#fff",
+              border:"1px solid rgba(197,160,89,0.22)",
+              borderRadius:"24px",
+              padding:"22px",
+              flexShrink:0,
+              display:"flex",
+              flexDirection:"column"
+            }}
+          >
+            <div style={{ display:"flex", gap:"3px", marginBottom:"10px" }}>
+              {[...Array(resena.estrellas || 5)].map((_,i) => <span key={i} style={{ color:"#c5a059", fontSize:"1rem" }}>⭐</span>)}
             </div>
-            <p style={{ fontSize:"0.97rem", lineHeight:1.65, color:"#3a3a3a", margin:"0 0 18px", fontStyle:"italic" }}>"{resena.mensaje}"</p>
-            <strong style={{ fontSize:"0.85rem", color:"#1a1a1a", letterSpacing:"0.5px" }}>{resena.nombre}</strong>
+            {resena.eventoTitulo && (
+              <div style={{ fontSize:"0.72rem", fontWeight:700, letterSpacing:"1.5px", textTransform:"uppercase", color:"#c5a059", marginBottom:"8px" }}>
+                {resena.eventoTitulo}
+              </div>
+            )}
+            <p style={{ fontSize:"0.9rem", lineHeight:1.65, color:"#3a3a3a", margin:"0 0 14px", fontStyle:"italic", flex:1 }}>"{resena.mensaje}"</p>
+            <strong style={{ fontSize:"0.82rem", color:"#1a1a1a", letterSpacing:"0.5px" }}>{resena.nombre}</strong>
           </article>
         ))}
       </div>

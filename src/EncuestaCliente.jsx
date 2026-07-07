@@ -62,6 +62,9 @@ const EncuestaCliente = () => {
   const [mensaje, setMensaje] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
+  const [cargandoIA, setCargandoIA] = useState(false);
+  const [resultadoIA, setResultadoIA] = useState("");
+  const [mostrarResultadoIA, setMostrarResultadoIA] = useState(false);
   const [cantidadResenasEvento, setCantidadResenasEvento] = useState(0);
   const [error, setError] = useState("");
   const [calificaciones, setCalificaciones] = useState({
@@ -100,6 +103,51 @@ const EncuestaCliente = () => {
 
   const cambiarCalificacion = (campo, valor) => {
     setCalificaciones((prev) => ({ ...prev, [campo]: valor }));
+  };
+
+  const mejorarConIA = async () => {
+    if (!mensaje.trim()) return;
+    setCargandoIA(true);
+    setResultadoIA("");
+    setMostrarResultadoIA(false);
+    try {
+      const prompt = `Sos asistente de un cliente que está completando una encuesta de satisfacción sobre un evento organizado por Luisina Bagnaroli, organizadora de eventos en Argentina.
+
+Tu tarea es tomar el texto que escribió el cliente y mejorarlo para que quede como una reseña más elaborada y expresiva, manteniendo su voz y emoción original.
+
+REGLAS ESTRICTAS:
+- Mantené el significado y los detalles originales, no inventes nada nuevo.
+- El tono debe ser cálido, informal pero respetuoso — como escribe una persona real, no una empresa.
+- Agregá 1 o 2 emojis que acompañen la emoción del mensaje (al final o en momentos clave).
+- El texto debe ser breve: máximo 4 o 5 oraciones.
+- Devolvé SOLO el texto mejorado, sin explicaciones ni comentarios adicionales.
+- Escribí en español argentino.
+
+Texto original del cliente:
+${mensaje}`;
+
+      const apiKey = import.meta.env.VITE_GROQ_KEY;
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: prompt }],
+          max_tokens: 300
+        })
+      });
+      const data = await res.json();
+      const texto = data.choices?.[0]?.message?.content || "";
+      setResultadoIA(texto.trim());
+      setMostrarResultadoIA(true);
+    } catch (e) {
+      setResultadoIA("No pudimos conectar con la IA. Podés enviar tu mensaje como está.");
+      setMostrarResultadoIA(true);
+    }
+    setCargandoIA(false);
   };
 
   const enviarEncuesta = async () => {
@@ -406,6 +454,66 @@ const EncuestaCliente = () => {
               resize: "vertical"
             }}
           />
+
+          {/* Botón IA */}
+          {mensaje.trim() && (
+            <div style={{ marginBottom: "14px" }}>
+              <button
+                type="button"
+                onClick={mejorarConIA}
+                disabled={cargandoIA}
+                style={{
+                  width: "100%",
+                  padding: "11px",
+                  borderRadius: "12px",
+                  border: "1.5px solid rgba(242,207,114,0.5)",
+                  background: "rgba(242,207,114,0.1)",
+                  color: "#f2cf72",
+                  fontWeight: 700,
+                  fontSize: "0.82rem",
+                  letterSpacing: "1px",
+                  cursor: cargandoIA ? "default" : "pointer",
+                  opacity: cargandoIA ? 0.7 : 1
+                }}
+              >
+                {cargandoIA ? "✨ Mejorando tu mensaje..." : "✨ Mejorar mi mensaje con IA"}
+              </button>
+            </div>
+          )}
+
+          {/* Resultado IA */}
+          {mostrarResultadoIA && resultadoIA && (
+            <div style={{
+              background: "rgba(255,255,255,0.95)",
+              borderRadius: "16px",
+              padding: "16px",
+              marginBottom: "14px",
+              border: "1.5px solid rgba(242,207,114,0.6)"
+            }}>
+              <div style={{ fontSize: "0.72rem", letterSpacing: "2px", textTransform: "uppercase", color: "#c5a059", marginBottom: "8px", fontWeight: 700 }}>
+                Versión mejorada ✨
+              </div>
+              <p style={{ fontSize: "0.92rem", lineHeight: 1.65, color: "#2a2a2a", margin: "0 0 12px" }}>
+                {resultadoIA}
+              </p>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  type="button"
+                  onClick={() => { setMensaje(resultadoIA); setMostrarResultadoIA(false); }}
+                  style={{ flex: 1, padding: "9px", borderRadius: "10px", border: "none", background: "linear-gradient(135deg, #d7b46a, #b88d3d)", color: "#fff", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer" }}
+                >
+                  ✅ Usar este texto
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMostrarResultadoIA(false)}
+                  style={{ padding: "9px 14px", borderRadius: "10px", border: "1.5px solid #ddd", background: "#fff", color: "#555", fontSize: "0.8rem", cursor: "pointer" }}
+                >
+                  Mantener el mío
+                </button>
+              </div>
+            </div>
+          )}
 
           {error && (
             <div style={{
