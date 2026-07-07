@@ -807,6 +807,129 @@ const CarruselResenas = ({ resenas }) => {
   );
 };
 
+const MejoradorIA = ({ campo, valor, onAplicar, onCerrar }) => {
+  const [borrador, setBorrador] = React.useState(valor || "");
+  const [resultado, setResultado] = React.useState("");
+  const [cargando, setCargando] = React.useState(false);
+  const [instruccion, setInstruccion] = React.useState("");
+
+  const mejorar = async (textoBase, instruccionExtra) => {
+    if (!textoBase.trim()) return;
+    setCargando(true);
+    setResultado("");
+    try {
+      const prompt = campo === "incluye"
+        ? `Sos asistente de Luisina Bagnaroli, diseñadora y productora de eventos en Argentina. Reescribí el siguiente texto del campo "Incluye" de una propuesta de evento de forma profesional, elegante y clara. Usá bullet points o numeración si tiene sentido. Mantené todos los detalles importantes. Escribí en español argentino formal.${instruccionExtra ? `
+
+Instrucción adicional: ${instruccionExtra}` : ""}
+
+Texto original:
+${textoBase}`
+        : `Sos asistente de Luisina Bagnaroli, diseñadora y productora de eventos en Argentina. Reescribí el siguiente texto de "Observaciones" de una propuesta de evento de forma profesional, clara y cortés. Mantené todos los detalles. Escribí en español argentino formal.${instruccionExtra ? `
+
+Instrucción adicional: ${instruccionExtra}` : ""}
+
+Texto original:
+${textoBase}`;
+
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 1000,
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+      const data = await res.json();
+      const texto = data.content?.map(c => c.text || "").join("") || "";
+      setResultado(texto.trim());
+    } catch (e) {
+      setResultado("Error al conectar con la IA. Intentá de nuevo.");
+    }
+    setCargando(false);
+  };
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.6)", zIndex:99999, display:"flex", alignItems:"center", justifyContent:"center", padding:"20px" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background:"#fff", borderRadius:"24px", padding:"28px", maxWidth:"600px", width:"100%", maxHeight:"90vh", overflowY:"auto", boxShadow:"0 30px 80px rgba(0,0,0,0.3)" }}>
+
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px" }}>
+          <div>
+            <div style={{ fontSize:"0.72rem", letterSpacing:"2px", textTransform:"uppercase", color:"#c5a059", fontWeight:700, marginBottom:"4px" }}>Asistente IA</div>
+            <h3 style={{ margin:0, fontSize:"1.15rem", color:"#1a1a1a" }}>
+              {campo === "incluye" ? "✨ Mejorar texto — Incluye" : "✨ Mejorar texto — Observaciones"}
+            </h3>
+          </div>
+          <button type="button" onClick={onCerrar} style={{ background:"none", border:"none", fontSize:"1.4rem", cursor:"pointer", color:"#888", lineHeight:1 }}>✕</button>
+        </div>
+
+        {/* Texto borrador */}
+        <label style={{ fontSize:"0.75rem", letterSpacing:"1.5px", textTransform:"uppercase", color:"#888", display:"block", marginBottom:"6px" }}>Tu texto</label>
+        <textarea
+          value={borrador}
+          onChange={e => setBorrador(e.target.value)}
+          style={{ width:"100%", minHeight:"100px", padding:"12px", borderRadius:"12px", border:"1.5px solid #e0e0e0", fontSize:"0.9rem", lineHeight:1.6, resize:"vertical", fontFamily:"inherit", boxSizing:"border-box", marginBottom:"12px" }}
+        />
+
+        {/* Instrucción opcional */}
+        <label style={{ fontSize:"0.75rem", letterSpacing:"1.5px", textTransform:"uppercase", color:"#888", display:"block", marginBottom:"6px" }}>Instrucción para la IA (opcional)</label>
+        <input
+          type="text"
+          value={instruccion}
+          onChange={e => setInstruccion(e.target.value)}
+          placeholder="Ej: hacelo más formal, agregá precio por persona, resumilo..."
+          style={{ width:"100%", padding:"10px 14px", borderRadius:"12px", border:"1.5px solid #e0e0e0", fontSize:"0.88rem", fontFamily:"inherit", boxSizing:"border-box", marginBottom:"14px" }}
+        />
+
+        <button
+          type="button"
+          onClick={() => mejorar(borrador, instruccion)}
+          disabled={cargando || !borrador.trim()}
+          style={{ width:"100%", padding:"13px", borderRadius:"12px", border:"none", background: cargando || !borrador.trim() ? "#e0e0e0" : "linear-gradient(135deg, #c5a059, #a3844a)", color: cargando || !borrador.trim() ? "#999" : "#fff", fontWeight:700, fontSize:"0.88rem", letterSpacing:"1px", textTransform:"uppercase", cursor: cargando || !borrador.trim() ? "not-allowed" : "pointer", marginBottom:"20px" }}
+        >
+          {cargando ? "✨ Generando..." : "✨ Mejorar con IA"}
+        </button>
+
+        {/* Resultado */}
+        {resultado && (
+          <div>
+            <label style={{ fontSize:"0.75rem", letterSpacing:"1.5px", textTransform:"uppercase", color:"#888", display:"block", marginBottom:"6px" }}>Resultado</label>
+            <div style={{ background:"#fafaf8", border:"1.5px solid rgba(197,160,89,0.3)", borderRadius:"12px", padding:"16px", fontSize:"0.9rem", lineHeight:1.7, color:"#2a2a2a", marginBottom:"14px", whiteSpace:"pre-wrap" }}>
+              {resultado}
+            </div>
+
+            <div style={{ display:"flex", gap:"10px" }}>
+              <button
+                type="button"
+                onClick={() => onAplicar(resultado)}
+                style={{ flex:1, padding:"12px", borderRadius:"12px", border:"none", background:"linear-gradient(135deg, #c5a059, #a3844a)", color:"#fff", fontWeight:700, fontSize:"0.85rem", cursor:"pointer", letterSpacing:"0.5px" }}
+              >
+                ✅ Usar este texto
+              </button>
+              <button
+                type="button"
+                onClick={() => { setBorrador(resultado); setResultado(""); }}
+                style={{ padding:"12px 18px", borderRadius:"12px", border:"1.5px solid #ddd", background:"#fff", color:"#555", fontSize:"0.85rem", cursor:"pointer" }}
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                onClick={() => mejorar(borrador, instruccion)}
+                style={{ padding:"12px 18px", borderRadius:"12px", border:"1.5px solid #ddd", background:"#fff", color:"#555", fontSize:"0.85rem", cursor:"pointer" }}
+              >
+                🔄 Regenerar
+              </button>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+};
+
 const AppContent = () => {
  const normalizarTexto = (texto) => {
   return texto
@@ -925,6 +1048,11 @@ const [cuotasPropuesta, setCuotasPropuesta] = useState("");
 const [incluyePropuesta, setIncluyePropuesta] = useState("");
 
 const [observacionesPropuesta, setObservacionesPropuesta] = useState("");
+
+const [panelIA, setPanelIA] = useState(null); // null | "incluye" | "observaciones"
+const [textoIA, setTextoIA] = useState("");
+const [cargandoIA, setCargandoIA] = useState(false);
+const [resultadoIA, setResultadoIA] = useState("");
 
 const [estilosPropuesta, setEstilosPropuesta] = useState([]);
 const [propuestas, setPropuestas] = useState([]);
@@ -4005,30 +4133,52 @@ if (condiciones) {
 
     </div>
 
-    <textarea
-      className="input-field"
-      style={{
-        height: "120px",
-        marginTop: "15px"
-      }}
-      placeholder="Qué incluye..."
-      value={incluyePropuesta}
-      onChange={(e) =>
-        setIncluyePropuesta(e.target.value)
-      }
-    />
+    <div style={{ position:"relative" }}>
+      <textarea
+        className="input-field"
+        style={{ height:"120px", marginTop:"15px" }}
+        placeholder="Qué incluye..."
+        value={incluyePropuesta}
+        onChange={(e) => setIncluyePropuesta(e.target.value)}
+      />
+      <button
+        type="button"
+        onClick={() => setPanelIA("incluye")}
+        style={{ position:"absolute", bottom:"10px", right:"10px", background:"linear-gradient(135deg, #c5a059, #a3844a)", border:"none", borderRadius:"8px", color:"#fff", padding:"5px 10px", fontSize:"0.72rem", fontWeight:700, cursor:"pointer", letterSpacing:"1px" }}
+      >
+        ✨ IA
+      </button>
+    </div>
 
-   <textarea
-  className="input-field"
-  style={{
-    height: "100px"
-  }}
-  placeholder="Observaciones..."
-  value={observacionesPropuesta}
-  onChange={(e) =>
-    setObservacionesPropuesta(e.target.value)
-  }
-/>
+    <div style={{ position:"relative" }}>
+      <textarea
+        className="input-field"
+        style={{ height:"100px" }}
+        placeholder="Observaciones..."
+        value={observacionesPropuesta}
+        onChange={(e) => setObservacionesPropuesta(e.target.value)}
+      />
+      <button
+        type="button"
+        onClick={() => setPanelIA("observaciones")}
+        style={{ position:"absolute", bottom:"10px", right:"10px", background:"linear-gradient(135deg, #c5a059, #a3844a)", border:"none", borderRadius:"8px", color:"#fff", padding:"5px 10px", fontSize:"0.72rem", fontWeight:700, cursor:"pointer", letterSpacing:"1px" }}
+      >
+        ✨ IA
+      </button>
+    </div>
+
+    {panelIA && (
+      <MejoradorIA
+        campo={panelIA}
+        valor={panelIA === "incluye" ? incluyePropuesta : observacionesPropuesta}
+        onAplicar={(texto) => {
+          if (panelIA === "incluye") setIncluyePropuesta(texto);
+          else setObservacionesPropuesta(texto);
+          setPanelIA(null);
+        }}
+        onCerrar={() => setPanelIA(null)}
+      />
+    )}
 <div style={{
   marginTop:"25px",
   marginBottom:"25px"
