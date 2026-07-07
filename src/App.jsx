@@ -4081,6 +4081,12 @@ if (condiciones) {
         </button>
       </div>
     </div>
+
+    <ChatbotWidget
+      conocimiento={conocimientoChatbot}
+      resenas={resenasPublicas}
+    />
+
   );
 }
     return (
@@ -7748,14 +7754,6 @@ setMesaActivaId(null);
         </div>
         </main>
     </div> {/* editor-layout */}
-
-  {/* Chatbot - solo en página pública */}
-  {!logueado && (
-    <ChatbotWidget
-      conocimiento={conocimientoChatbot}
-      resenas={resenasPublicas}
-    />
-  )}
 
   </div>
 );
