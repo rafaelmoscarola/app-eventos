@@ -4336,32 +4336,7 @@ if (condiciones) {
                   </div>
                 )}
 
-                {/* Suscripción WhatsApp */}
-                <div style={{ padding:"12px 18px 18px", borderTop:"1px solid rgba(255,255,255,0.08)", textAlign:"center" }}>
-                  <div style={{ color:"rgba(255,255,255,0.5)", fontSize:"0.75rem", marginBottom:"8px" }}>
-                    ¿Querés seguir nuestro trabajo en vivo?
-                  </div>
-                  <a
-                    href={`https://wa.me/543476552562?text=${encodeURIComponent("¡Hola! Me gustaría seguir el trabajo en vivo de Luisina Bagnaroli 📸")}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "7px",
-                      padding: "10px 20px",
-                      borderRadius: "999px",
-                      background: "#25D366",
-                      color: "#fff",
-                      fontWeight: 700,
-                      fontSize: "0.82rem",
-                      textDecoration: "none",
-                      letterSpacing: "0.5px"
-                    }}
-                  >
-                    💬 Seguinos por WhatsApp
-                  </a>
-                </div>
+          
               </>
             )}
           </div>
