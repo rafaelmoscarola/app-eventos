@@ -1972,6 +1972,15 @@ useEffect(() => {
 
 }, []);
 
+// Cargar fotos en vivo
+useEffect(() => {
+  const q = query(collection(db, "fotos_en_vivo"), orderBy("creada", "desc"));
+  const unsub = onSnapshot(q, snap => {
+    setFotosEnVivo(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+  return () => unsub();
+}, []);
+
 // Cargar conocimiento del chatbot
 useEffect(() => {
   const q = query(collection(db, "chatbot_conocimiento"), orderBy("creada", "desc"));
@@ -4185,6 +4194,182 @@ if (condiciones) {
     resenas={resenasPublicas}
   />
 
+  {/* Botón pulsante "En vivo" */}
+  {fotosEnVivo.length > 0 && (
+    <>
+      <style>{`
+        @keyframes pulseVivo {
+          0%,100% { box-shadow: 0 0 0 0 rgba(255,60,60,0.5), 0 0 0 0 rgba(255,60,60,0.3); transform: scale(1); }
+          50% { box-shadow: 0 0 0 10px rgba(255,60,60,0.15), 0 0 0 20px rgba(255,60,60,0.05); transform: scale(1.05); }
+        }
+        @keyframes brilloVivo {
+          0%,100% { opacity:1; }
+          50% { opacity:0.5; }
+        }
+      `}</style>
+      <div
+        onClick={() => { setVisorFotosAbierto(true); setFotoVisorIdx(0); }}
+        style={{
+          position: "fixed",
+          bottom: "100px",
+          left: "20px",
+          zIndex: 9998,
+          cursor: "pointer",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "6px"
+        }}
+      >
+        <div style={{
+          width: "54px",
+          height: "54px",
+          borderRadius: "999px",
+          background: "linear-gradient(135deg, #ff3c3c, #ff6b6b)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          animation: "pulseVivo 2s ease-in-out infinite",
+          border: "2px solid rgba(255,255,255,0.8)",
+          boxShadow: "0 4px 20px rgba(255,60,60,0.4)"
+        }}>
+          <span style={{ fontSize:"1.3rem" }}>📸</span>
+        </div>
+        <div style={{
+          background: "rgba(0,0,0,0.75)",
+          color: "#fff",
+          fontSize: "0.65rem",
+          fontWeight: 700,
+          letterSpacing: "1.5px",
+          textTransform: "uppercase",
+          padding: "3px 8px",
+          borderRadius: "999px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px"
+        }}>
+          <span style={{ width:"6px", height:"6px", borderRadius:"50%", background:"#ff3c3c", display:"inline-block", animation:"brilloVivo 1s ease-in-out infinite" }}/>
+          En vivo
+        </div>
+      </div>
+
+      {/* Visor de fotos */}
+      {visorFotosAbierto && (
+        <div
+          onClick={() => setVisorFotosAbierto(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.88)",
+            zIndex: 99999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: "min(360px, 92vw)",
+              maxHeight: "90vh",
+              background: "#0f0f0f",
+              borderRadius: "24px",
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              border: "1px solid rgba(255,255,255,0.1)"
+            }}
+          >
+            {/* Header */}
+            <div style={{ padding:"14px 18px", display:"flex", justifyContent:"space-between", alignItems:"center", borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
+                <span style={{ width:"8px", height:"8px", borderRadius:"50%", background:"#ff3c3c", display:"inline-block", animation:"brilloVivo 1s ease-in-out infinite" }}/>
+                <span style={{ color:"#fff", fontWeight:700, fontSize:"0.88rem", letterSpacing:"1px" }}>EN VIVO</span>
+                <span style={{ color:"rgba(255,255,255,0.4)", fontSize:"0.78rem" }}>· Luisina Bagnaroli</span>
+              </div>
+              <button type="button" onClick={() => setVisorFotosAbierto(false)} style={{ background:"none", border:"none", color:"rgba(255,255,255,0.6)", fontSize:"1.2rem", cursor:"pointer" }}>✕</button>
+            </div>
+
+            {/* Foto */}
+            {fotosEnVivo[fotoVisorIdx] && (
+              <>
+                <div style={{ position:"relative", flex:1 }}>
+                  <img
+                    src={fotosEnVivo[fotoVisorIdx].url}
+                    alt=""
+                    style={{ width:"100%", aspectRatio:"9/16", objectFit:"cover", display:"block", maxHeight:"55vh" }}
+                  />
+                  {/* Fecha y lugar sobre la foto */}
+                  <div style={{ position:"absolute", top:"12px", left:"12px", right:"12px" }}>
+                    <div style={{ background:"rgba(0,0,0,0.6)", borderRadius:"10px", padding:"8px 12px", backdropFilter:"blur(8px)" }}>
+                      {fotosEnVivo[fotoVisorIdx].lugar && (
+                        <div style={{ color:"#f2cf72", fontSize:"0.78rem", fontWeight:700, marginBottom:"2px" }}>
+                          📍 {fotosEnVivo[fotoVisorIdx].lugar}
+                        </div>
+                      )}
+                      <div style={{ color:"rgba(255,255,255,0.7)", fontSize:"0.72rem" }}>
+                        {new Date(fotosEnVivo[fotoVisorIdx].creada).toLocaleDateString("es-AR", { weekday:"long", day:"2-digit", month:"long" })} · {new Date(fotosEnVivo[fotoVisorIdx].creada).toLocaleTimeString("es-AR", { hour:"2-digit", minute:"2-digit" })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Comentario */}
+                {fotosEnVivo[fotoVisorIdx].comentario && (
+                  <div style={{ padding:"16px 18px", color:"#fff", fontSize:"0.92rem", lineHeight:1.6 }}>
+                    {fotosEnVivo[fotoVisorIdx].comentario}
+                  </div>
+                )}
+
+                {/* Navegación entre fotos */}
+                {fotosEnVivo.length > 1 && (
+                  <div style={{ padding:"10px 18px 16px", display:"flex", justifyContent:"center", gap:"8px" }}>
+                    {fotosEnVivo.map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setFotoVisorIdx(i)}
+                        style={{ width: i === fotoVisorIdx ? "22px" : "7px", height:"7px", borderRadius:"999px", border:"none", background: i === fotoVisorIdx ? "#f2cf72" : "rgba(255,255,255,0.3)", padding:0, cursor:"pointer", transition:"all 0.3s ease" }}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Suscripción WhatsApp */}
+                <div style={{ padding:"12px 18px 18px", borderTop:"1px solid rgba(255,255,255,0.08)", textAlign:"center" }}>
+                  <div style={{ color:"rgba(255,255,255,0.5)", fontSize:"0.75rem", marginBottom:"8px" }}>
+                    ¿Querés seguir nuestro trabajo en vivo?
+                  </div>
+                  <a
+                    href={`https://wa.me/543476552562?text=${encodeURIComponent("¡Hola! Me gustaría seguir el trabajo en vivo de Luisina Bagnaroli 📸")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "7px",
+                      padding: "10px 20px",
+                      borderRadius: "999px",
+                      background: "#25D366",
+                      color: "#fff",
+                      fontWeight: 700,
+                      fontSize: "0.82rem",
+                      textDecoration: "none",
+                      letterSpacing: "0.5px"
+                    }}
+                  >
+                    💬 Seguinos por WhatsApp
+                  </a>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  )}
+
   </div>
   
 );
@@ -4634,6 +4819,151 @@ if (condiciones) {
               )}
             </div>
             {/* ── FIN PANEL CHATBOT ────────────────────────────── */}
+
+            {/* ── PANEL FOTOS EN VIVO ──────────────────────────── */}
+            <div style={{ background:"#fff", padding:"28px", borderRadius:"24px", marginBottom:"32px", boxShadow:"0 10px 35px rgba(0,0,0,0.06)" }}>
+              <button
+                className="btn-luxury btn-outline"
+                style={{ width:"100%" }}
+                onClick={() => setMostrarPanelFotos(prev => !prev)}
+              >
+                {mostrarPanelFotos ? "Ocultar fotos en vivo" : `📸 Fotos en vivo (${fotosEnVivo.length}/3)`}
+              </button>
+
+              {mostrarPanelFotos && (
+                <div style={{ marginTop:"22px" }}>
+
+                  {/* Formulario nueva foto */}
+                  <div style={{ marginBottom:"24px", padding:"20px", background:"#fafaf8", borderRadius:"16px", border:"1px solid #e8e0d0" }}>
+                    <label style={{ fontSize:"0.75rem", letterSpacing:"2px", textTransform:"uppercase", color:"#888", display:"block", marginBottom:"10px" }}>
+                      Nueva foto en vivo
+                    </label>
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="input-foto-vivo"
+                      style={{ display:"none" }}
+                      onChange={async (e) => {
+                        const archivo = e.target.files[0];
+                        if (!archivo) return;
+                        setSubiendoFoto(true);
+                        try {
+                          // Convertir a WebP via canvas
+                          const url = URL.createObjectURL(archivo);
+                          const img = new Image();
+                          img.src = url;
+                          await new Promise(res => img.onload = res);
+                          const canvas = document.createElement("canvas");
+                          const MAX = 1080;
+                          const ratio = Math.min(MAX / img.width, MAX * 1.78 / img.height, 1);
+                          canvas.width = img.width * ratio;
+                          canvas.height = img.height * ratio;
+                          canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+                          const blob = await new Promise(res => canvas.toBlob(res, "image/webp", 0.82));
+
+                          // Subir a Cloudinary
+                          const fd = new FormData();
+                          fd.append("file", blob, "foto.webp");
+                          fd.append("upload_preset", "filamento_productos");
+                          fd.append("folder", "app-eventos/en-vivo");
+                          const res = await fetch("https://api.cloudinary.com/v1_1/dbszmrt3l/image/upload", { method:"POST", body:fd });
+                          const data = await res.json();
+                          const fotoUrl = data.secure_url;
+                          const publicId = data.public_id;
+
+                          // Si hay 3 fotos, borrar la más vieja
+                          if (fotosEnVivo.length >= 3) {
+                            const masVieja = fotosEnVivo[fotosEnVivo.length - 1];
+                            // Borrar de Cloudinary via delete
+                            await fetch(`https://api.cloudinary.com/v1_1/dbszmrt3l/image/destroy`, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ public_id: masVieja.publicId, upload_preset: "filamento_productos" })
+                            }).catch(() => {});
+                            await deleteDoc(doc(db, "fotos_en_vivo", masVieja.id));
+                          }
+
+                          // Guardar en Firestore
+                          await addDoc(collection(db, "fotos_en_vivo"), {
+                            url: fotoUrl,
+                            publicId,
+                            comentario: comentarioFoto.trim() || "",
+                            lugar: lugarFoto.trim() || "",
+                            creada: Date.now()
+                          });
+
+                          setComentarioFoto("");
+                          setLugarFoto("");
+                          e.target.value = "";
+                        } catch(err) {
+                          alert("Error subiendo la foto. Intentá de nuevo.");
+                        }
+                        setSubiendoFoto(false);
+                      }}
+                    />
+
+                    <input
+                      className="input-field"
+                      placeholder="Lugar (ej: Salón La Esperanza, Gálvez)"
+                      value={lugarFoto}
+                      onChange={e => setLugarFoto(e.target.value)}
+                      style={{ marginBottom:"10px" }}
+                    />
+                    <textarea
+                      className="input-field"
+                      placeholder="Comentario (ej: Preparando el escenario del 9 de Julio)"
+                      value={comentarioFoto}
+                      onChange={e => setComentarioFoto(e.target.value)}
+                      style={{ height:"70px", marginBottom:"12px" }}
+                    />
+
+                    <button
+                      type="button"
+                      className="btn-luxury"
+                      style={{ width:"100%", opacity: subiendoFoto ? 0.6 : 1 }}
+                      disabled={subiendoFoto}
+                      onClick={() => document.getElementById("input-foto-vivo").click()}
+                    >
+                      {subiendoFoto ? "⏳ Subiendo..." : "📸 Seleccionar y subir foto"}
+                    </button>
+                  </div>
+
+                  {/* Lista de fotos actuales */}
+                  {fotosEnVivo.length === 0 ? (
+                    <p style={{ color:"#aaa", fontSize:"0.9rem" }}>No hay fotos en vivo todavía.</p>
+                  ) : (
+                    <div style={{ display:"flex", flexDirection:"column", gap:"12px" }}>
+                      {fotosEnVivo.map((foto, i) => (
+                        <div key={foto.id} style={{ display:"flex", gap:"12px", alignItems:"center", background:"#fafaf8", borderRadius:"14px", padding:"12px", border:"1px solid #e8e0d0" }}>
+                          <img src={foto.url} alt="" style={{ width:"60px", height:"80px", objectFit:"cover", borderRadius:"10px", flexShrink:0 }} />
+                          <div style={{ flex:1, minWidth:0 }}>
+                            {foto.lugar && <div style={{ fontSize:"0.72rem", color:"#c5a059", fontWeight:700, marginBottom:"3px" }}>{foto.lugar}</div>}
+                            <div style={{ fontSize:"0.85rem", color:"#333", lineHeight:1.5 }}>{foto.comentario || "Sin comentario"}</div>
+                            <div style={{ fontSize:"0.72rem", color:"#aaa", marginTop:"4px" }}>
+                              {new Date(foto.creada).toLocaleDateString("es-AR", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className="btn-luxury btn-outline"
+                            style={{ fontSize:"0.72rem", padding:"6px 10px", borderColor:"#e88", color:"#c44", flexShrink:0 }}
+                            onClick={async () => {
+                              if (window.confirm("¿Eliminar esta foto?")) {
+                                await deleteDoc(doc(db, "fotos_en_vivo", foto.id));
+                              }
+                            }}
+                          >
+                            🗑
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* ── FIN PANEL FOTOS EN VIVO ───────────────────────── */}
 
             {mostrarPropuesta && (
 
