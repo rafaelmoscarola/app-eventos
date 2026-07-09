@@ -4204,7 +4204,7 @@ if (condiciones) {
         onClick={() => { setVisorFotosAbierto(true); setFotoVisorIdx(0); }}
         style={{
           position: "fixed",
-          bottom: "100px",
+          bottom: "16px",
           left: "20px",
           zIndex: 9998,
           cursor: "pointer",
