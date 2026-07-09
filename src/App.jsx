@@ -996,30 +996,6 @@ const ChatbotWidget = ({ conocimiento, resenas }) => {
 
   // Animación de entrada + sonido R2-D2
   React.useEffect(() => {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const seq = [
-        {f:800,t:0,d:0.12},{f:1200,t:0.15,d:0.08},{f:600,t:0.25,d:0.15},
-        {f:1400,t:0.42,d:0.07},{f:900,t:0.52,d:0.12},{f:1100,t:0.66,d:0.10},
-        {f:700,t:0.78,d:0.18},{f:1300,t:0.98,d:0.08},{f:850,t:1.08,d:0.14},
-        {f:1000,t:1.24,d:0.22}
-      ];
-      seq.forEach(({f,t,d}) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(f, ctx.currentTime+t);
-        osc.frequency.exponentialRampToValueAtTime(f*1.3, ctx.currentTime+t+d*0.5);
-        osc.frequency.exponentialRampToValueAtTime(f*0.85, ctx.currentTime+t+d);
-        gain.gain.setValueAtTime(0, ctx.currentTime+t);
-        gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime+t+0.01);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+t+d);
-        osc.start(ctx.currentTime+t);
-        osc.stop(ctx.currentTime+t+d+0.05);
-      });
-      setTimeout(() => ctx.close(), 2000);
-    } catch(e) {}
     const t1 = setTimeout(() => setFaseEntrada("volando"), 5000);
     const t2 = setTimeout(() => setFaseEntrada("chico"), 5800);
     return () => { clearTimeout(t1); clearTimeout(t2); };
@@ -1576,13 +1552,6 @@ const [observacionRecibo, setObservacionRecibo] = useState("");
 const [historialRecibosPropuestaId, setHistorialRecibosPropuestaId] = useState(null);
 const [resenasPublicas, setResenasPublicas] = useState([]);
 const [conocimientoChatbot, setConocimientoChatbot] = useState([]);
-const [fotosEnVivo, setFotosEnVivo] = useState([]);
-const [mostrarPanelFotos, setMostrarPanelFotos] = useState(false);
-const [subiendoFoto, setSubiendoFoto] = useState(false);
-const [comentarioFoto, setComentarioFoto] = useState("");
-const [lugarFoto, setLugarFoto] = useState("");
-const [visorFotosAbierto, setVisorFotosAbierto] = useState(false);
-const [fotoVisorIdx, setFotoVisorIdx] = useState(0);
 const [nuevaEntradaChatbot, setNuevaEntradaChatbot] = useState("");
 const [editandoChatbotId, setEditandoChatbotId] = useState(null);
 const [editandoChatbotTexto, setEditandoChatbotTexto] = useState("");
