@@ -1552,6 +1552,13 @@ const [observacionRecibo, setObservacionRecibo] = useState("");
 const [historialRecibosPropuestaId, setHistorialRecibosPropuestaId] = useState(null);
 const [resenasPublicas, setResenasPublicas] = useState([]);
 const [conocimientoChatbot, setConocimientoChatbot] = useState([]);
+const [fotosEnVivo, setFotosEnVivo] = useState([]);
+const [mostrarPanelFotos, setMostrarPanelFotos] = useState(false);
+const [subiendoFoto, setSubiendoFoto] = useState(false);
+const [comentarioFoto, setComentarioFoto] = useState("");
+const [lugarFoto, setLugarFoto] = useState("");
+const [visorFotosAbierto, setVisorFotosAbierto] = useState(false);
+const [fotoVisorIdx, setFotoVisorIdx] = useState(0);
 const [nuevaEntradaChatbot, setNuevaEntradaChatbot] = useState("");
 const [editandoChatbotId, setEditandoChatbotId] = useState(null);
 const [editandoChatbotTexto, setEditandoChatbotTexto] = useState("");
@@ -1946,6 +1953,15 @@ useEffect(() => {
 
   return () => unsubResenas();
 
+}, []);
+
+// Cargar fotos en vivo
+useEffect(() => {
+  const q = query(collection(db, "fotos_en_vivo"), orderBy("creada", "desc"));
+  const unsub = onSnapshot(q, snap => {
+    setFotosEnVivo(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+  return () => unsub();
 }, []);
 
 // Cargar fotos en vivo
