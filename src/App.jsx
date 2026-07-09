@@ -1555,6 +1555,7 @@ const [conocimientoChatbot, setConocimientoChatbot] = useState([]);
 const [fotosEnVivo, setFotosEnVivo] = useState([]);
 const [mostrarPanelFotos, setMostrarPanelFotos] = useState(false);
 const [subiendoFoto, setSubiendoFoto] = useState(false);
+const [cargandoIAFoto, setCargandoIAFoto] = useState(false);
 const [comentarioFoto, setComentarioFoto] = useState("");
 const [lugarFoto, setLugarFoto] = useState("");
 const [visorFotosAbierto, setVisorFotosAbierto] = useState(false);
@@ -4882,8 +4883,64 @@ if (condiciones) {
                       placeholder="Comentario (ej: Preparando el escenario del 9 de Julio)"
                       value={comentarioFoto}
                       onChange={e => setComentarioFoto(e.target.value)}
-                      style={{ height:"70px", marginBottom:"12px" }}
+                      style={{ height:"70px", marginBottom:"6px" }}
                     />
+
+                    <button
+                      type="button"
+                      style={{
+                        width:"100%",
+                        marginBottom:"10px",
+                        padding:"9px",
+                        borderRadius:"12px",
+                        border:"1.5px solid rgba(197,160,89,0.5)",
+                        background:"rgba(197,160,89,0.08)",
+                        color:"#c5a059",
+                        fontWeight:700,
+                        fontSize:"0.78rem",
+                        letterSpacing:"1px",
+                        cursor: cargandoIAFoto ? "default" : "pointer",
+                        opacity: cargandoIAFoto ? 0.6 : 1
+                      }}
+                      disabled={cargandoIAFoto}
+                      onClick={async () => {
+                        setCargandoIAFoto(true);
+                        try {
+                          const base = comentarioFoto.trim() || lugarFoto.trim() || "foto de nuestro trabajo";
+                          const prompt = `Sos community manager de Luisina Bagnaroli, empresa de diseño y producción de eventos en Gálvez, Santa Fe, Argentina. Llevamos más de 10 años creando experiencias únicas: casamientos, fiestas de 15 años, cumpleaños, bautismos, eventos empresariales, actos institucionales y decoración de vidrieras comerciales. Fabricamos nuestras propias piezas y nos diferenciamos por el diseño integral y personalizado.
+
+Escribí un comentario estilo Instagram para acompañar una foto de nuestro trabajo. 
+
+REGLAS ESTRICTAS:
+- Máximo 150 caracteres en total
+- Usá 2 o 3 emojis que peguen con el contexto
+- Tono cercano, entusiasta y comercial
+- Siempre hacé referencia al trabajo de diseño y decoración de eventos
+- Que invite a contactarnos o a soñar con su evento
+- Escribí en español argentino
+- Devolvé SOLO el texto del comentario, sin comillas ni explicaciones
+
+Contexto de la foto: ${base}`;
+
+                          const apiKey = import.meta.env.VITE_GROQ_KEY;
+                          const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+                            body: JSON.stringify({
+                              model: "llama-3.3-70b-versatile",
+                              messages: [{ role: "user", content: prompt }],
+                              max_tokens: 120
+                            })
+                          });
+                          const d = await res.json();
+                          const texto = d.choices?.[0]?.message?.content?.trim() || "";
+                          if (texto) setComentarioFoto(texto);
+                        } catch(e) {}
+                        setCargandoIAFoto(false);
+                      }}
+                    >
+                      {cargandoIAFoto ? "Generando..." : "\u2728 Generar comentario con IA"}
+                    </button>
 
                     <button
                       type="button"
