@@ -1554,6 +1554,7 @@ const [resenasPublicas, setResenasPublicas] = useState([]);
 const [conocimientoChatbot, setConocimientoChatbot] = useState([]);
 const [fotosEnVivo, setFotosEnVivo] = useState([]);
 const [mostrarPanelFotos, setMostrarPanelFotos] = useState(false);
+const [mostrarPanelCalendario, setMostrarPanelCalendario] = useState(false);
 const [subiendoFoto, setSubiendoFoto] = useState(false);
 const [cargandoIAFoto, setCargandoIAFoto] = useState(false);
 const [comentarioFoto, setComentarioFoto] = useState("");
@@ -2711,6 +2712,18 @@ await updateDoc(docRef, { id: docRef.id });
 nuevo.id = docRef.id;
 
   console.log(" Guardado en Firebase");
+
+  // Notificar al calendario
+  try {
+    await fetch("https://calendario-lb.vercel.app/api/notif-inmediata", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer lb-cron-2026" },
+      body: JSON.stringify({
+        titulo: `🎉 Nuevo evento: ${nuevo.nombre || "Evento"}`,
+        cuerpo: `Fecha: ${nuevo.fecha || ""}`
+      })
+    });
+  } catch(e) {}
 
   // 🔥 después guarda en tu app (local)
 
@@ -4797,6 +4810,43 @@ if (condiciones) {
               >
                 {mostrarPanelFotos ? "Ocultar fotos en vivo" : `📸 Fotos en vivo (${fotosEnVivo.length}/3)`}
               </button>
+
+              {/* Botón calendario - solo admin */}
+              <button
+                className="btn-luxury btn-outline"
+                style={{ width:"100%", marginTop:"8px" }}
+                onClick={() => setMostrarPanelCalendario(prev => !prev)}
+              >
+                📅 Calendario del equipo
+              </button>
+
+              {mostrarPanelCalendario && (
+                <div style={{ marginTop:"16px", background:"rgba(197,160,89,0.08)", borderRadius:"16px", padding:"20px", border:"1px solid rgba(197,160,89,0.2)" }}>
+                  <div style={{ fontSize:"0.85rem", color:"rgba(0,0,0,0.6)", marginBottom:"16px", lineHeight:1.5 }}>
+                    Compartí este link con tu equipo para que puedan instalar el calendario:
+                  </div>
+                  <div style={{ background:"#fff", borderRadius:"10px", padding:"12px 14px", fontSize:"0.8rem", color:"#333", fontFamily:"monospace", wordBreak:"break-all", marginBottom:"14px", border:"1px solid rgba(0,0,0,0.08)" }}>
+                    https://calendario-lb.vercel.app
+                  </div>
+                  <div style={{ fontSize:"0.78rem", color:"rgba(0,0,0,0.4)", marginBottom:"14px" }}>
+                    Código de acceso: <strong>1417</strong>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText("https://calendario-lb.vercel.app").then(() => alert("Link copiado!")).catch(() => {});
+                    }}
+                    style={{ width:"100%", padding:"12px", borderRadius:"12px", background:"linear-gradient(135deg, #c5a059, #a3844a)", border:"none", color:"#fff", fontWeight:700, fontSize:"0.85rem", cursor:"pointer", marginBottom:"10px" }}
+                  >
+                    📋 Copiar link
+                  </button>
+                  <button
+                    onClick={() => window.open("https://calendario-lb.vercel.app", "_blank")}
+                    style={{ width:"100%", padding:"12px", borderRadius:"12px", background:"transparent", border:"1px solid rgba(197,160,89,0.4)", color:"#c5a059", fontWeight:700, fontSize:"0.85rem", cursor:"pointer" }}
+                  >
+                    Abrir calendario ↗
+                  </button>
+                </div>
+              )}
 
               {mostrarPanelFotos && (
                 <div style={{ marginTop:"22px" }}>
