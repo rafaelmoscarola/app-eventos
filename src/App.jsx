@@ -1957,6 +1957,13 @@ useEffect(() => {
 
 }, []);
 
+// Cargar productos de alquiler
+useEffect(() => {
+  return onSnapshot(collection(db, 'productos_alquiler'), snap => {
+    setProductosAlquiler(snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.nombre||"").localeCompare(b.nombre||"")));
+  });
+}, []);
+
 // Cargar fotos en vivo
 useEffect(() => {
   const q = query(collection(db, "fotos_en_vivo"), orderBy("creada", "desc"));
@@ -5189,7 +5196,24 @@ Contexto de la foto: ${base}`;
 
     </div>
 
-    <div style={{ position:"relative" }}>
+    {/* SELECTOR PRODUCTOS ALQUILER */}
+      {tipoPropuesta === "alquiler" && (
+        <SelectorProductosAlquiler
+          productos={productosAlquiler}
+          items={itemsAlquiler}
+          setItems={setItemsAlquiler}
+          fechaPropuesta={fechaPropuesta}
+          descuento={descuentoAlquiler}
+          setDescuento={setDescuentoAlquiler}
+          envio={envioAlquiler}
+          setEnvio={setEnvioAlquiler}
+          onAplicar={(texto, total) => {
+            setIncluyePropuesta(texto);
+          }}
+        />
+      )}
+
+      <div style={{ position:"relative" }}>
       <textarea
         className="input-field"
         style={{ height:"120px", marginTop:"15px" }}
@@ -8395,18 +8419,201 @@ setMesaActivaId(null);
 
 export default App;
 
+// ── SELECTOR PRODUCTOS ALQUILER ───────────────────────────────────────────────
+function SelectorProductosAlquiler({ productos, items, setItems, fechaPropuesta, descuento, setDescuento, envio, setEnvio, onAplicar }) {
+  const [abierto, setAbierto] = React.useState(false);
+  const [busqueda, setBusqueda] = React.useState('');
 
+  // Calcular disponibilidad por fecha (simplificado - basado en stock)
+  const getDisponible = (prod) => {
+    return prod.stock || 0;
+  };
 
+  const agregarProducto = (prod) => {
+    const existe = items.find(i => i.id === prod.id);
+    if (existe) return;
+    setItems(prev => [...prev, {
+      id: prod.id,
+      nombre: prod.nombre,
+      material: prod.material,
+      color: prod.color,
+      medidas: prod.medidas,
+      otro: prod.otro,
+      precio: prod.precio,
+      precioCustom: prod.precio,
+      cantidad: 1,
+      disponible: getDisponible(prod)
+    }]);
+  };
 
+  const actualizarItem = (id, campo, valor) => {
+    setItems(prev => prev.map(i => i.id === id ? { ...i, [campo]: valor } : i));
+  };
 
+  const quitarItem = (id) => {
+    setItems(prev => prev.filter(i => i.id !== id));
+  };
 
+  const subtotal = items.reduce((acc, i) => acc + (Number(i.precioCustom) || 0) * (Number(i.cantidad) || 1), 0);
+  const descuentoNum = Number(descuento) || 0;
+  const envioNum = Number(envio) || 0;
+  const total = subtotal - descuentoNum + envioNum;
 
+  const aplicarAIncluye = () => {
+    const lineas = items.map(i => {
+      const cant = Number(i.cantidad) || 1;
+      const precio = Number(i.precioCustom) || 0;
+      const detalle = [i.material, i.color, i.medidas, i.otro].filter(Boolean).join(' · ');
+      return `${cant}x ${i.nombre}${detalle ? ` (${detalle})` : ''} — $${(precio * cant).toLocaleString('es-AR')}`;
+    });
+    if (descuentoNum > 0) lineas.push(`Descuento — -$${descuentoNum.toLocaleString('es-AR')}`);
+    if (envioNum > 0) lineas.push(`Envío — $${envioNum.toLocaleString('es-AR')}`);
+    lineas.push(`TOTAL: $${total.toLocaleString('es-AR')}`);
+    onAplicar(lineas.join('\n'), total);
+  };
 
+  const productosFiltrados = productos.filter(p =>
+    !items.find(i => i.id === p.id) &&
+    p.nombre?.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
+  return (
+    <div style={{ marginBottom: '16px', border: '1.5px solid rgba(197,160,89,0.3)', borderRadius: '16px', overflow: 'hidden', background: 'rgba(197,160,89,0.03)' }}>
+      {/* Header */}
+      <div
+        onClick={() => setAbierto(p => !p)}
+        style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', background: 'rgba(197,160,89,0.08)' }}
+      >
+        <div style={{ fontWeight: 700, color: '#c5a059', fontSize: '0.9rem' }}>
+          📦 Lista de productos para alquiler {items.length > 0 ? `(${items.length} seleccionados)` : ''}
+        </div>
+        <div style={{ color: '#c5a059', fontSize: '1.1rem' }}>{abierto ? '▲' : '▼'}</div>
+      </div>
 
+      {abierto && (
+        <div style={{ padding: '16px 18px' }}>
+          {/* Buscador */}
+          <input
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            placeholder="Buscar producto para agregar..."
+            style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #ddd', marginBottom: '10px', fontSize: '0.9rem', boxSizing: 'border-box' }}
+          />
 
+          {/* Productos disponibles */}
+          {productosFiltrados.length > 0 && (
+            <div style={{ maxHeight: '180px', overflowY: 'auto', marginBottom: '14px', border: '1px solid #eee', borderRadius: '10px' }}>
+              {productosFiltrados.map(p => (
+                <div key={p.id}
+                  onClick={() => agregarProducto(p)}
+                  style={{ padding: '10px 14px', borderBottom: '1px solid #f5f5f5', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#faf7f0'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1a1a1a' }}>{p.nombre}</div>
+                    <div style={{ fontSize: '0.78rem', color: '#888' }}>{[p.material, p.color, p.medidas, p.otro].filter(Boolean).join(' · ')}</div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                    <span style={{ color: '#c5a059', fontWeight: 700, fontSize: '0.85rem' }}>${Number(p.precio || 0).toLocaleString('es-AR')}</span>
+                    <span style={{ fontSize: '0.72rem', color: '#aaa' }}>Stock: {p.stock}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
+          {/* Items seleccionados */}
+          {items.length > 0 && (
+            <div style={{ marginBottom: '14px' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#888', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>Seleccionados</div>
+              {items.map(item => (
+                <div key={item.id} style={{ background: '#fff', border: '1px solid #eee', borderRadius: '10px', padding: '10px 12px', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#1a1a1a' }}>{item.nombre}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#888' }}>{[item.material, item.color, item.medidas, item.otro].filter(Boolean).join(' · ')}</div>
+                    </div>
+                    <button onClick={() => quitarItem(item.id)}
+                      style={{ background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer', fontSize: '1.1rem', padding: '0 4px' }}>×</button>
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <label style={{ fontSize: '0.7rem', color: '#888', fontWeight: 700 }}>CANTIDAD (máx {item.disponible})</label>
+                      <input type="number" min="1" max={item.disponible}
+                        value={item.cantidad}
+                        onChange={e => actualizarItem(item.id, 'cantidad', Math.min(Number(e.target.value), item.disponible))}
+                        style={{ width: '80px', padding: '6px 8px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.9rem', fontWeight: 700 }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <label style={{ fontSize: '0.7rem', color: '#888', fontWeight: 700 }}>PRECIO UNIT.</label>
+                      <input type="number"
+                        value={item.precioCustom}
+                        onChange={e => actualizarItem(item.id, 'precioCustom', Number(e.target.value))}
+                        style={{ width: '110px', padding: '6px 8px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.9rem' }}
+                      />
+                    </div>
+                    <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+                      <div style={{ fontSize: '0.7rem', color: '#888' }}>Subtotal</div>
+                      <div style={{ fontWeight: 800, color: '#c5a059', fontSize: '0.95rem' }}>
+                        ${((Number(item.precioCustom) || 0) * (Number(item.cantidad) || 1)).toLocaleString('es-AR')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
 
+              {/* Descuento y Envío */}
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '0.7rem', color: '#c1121f', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>DESCUENTO</label>
+                  <input type="number" value={descuento} onChange={e => setDescuento(e.target.value)}
+                    placeholder="0"
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1.5px solid #c1121f', fontSize: '0.9rem', color: '#c1121f', fontWeight: 700, boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '0.7rem', color: '#2d6a4f', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>ENVÍO</label>
+                  <input type="number" value={envio} onChange={e => setEnvio(e.target.value)}
+                    placeholder="0"
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1.5px solid #2d6a4f', fontSize: '0.9rem', color: '#2d6a4f', fontWeight: 700, boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
 
+              {/* Totalizador */}
+              <div style={{ background: '#1a1a1a', borderRadius: '12px', padding: '14px 16px', marginBottom: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', marginBottom: '4px' }}>
+                  <span>Subtotal</span>
+                  <span>${subtotal.toLocaleString('es-AR')}</span>
+                </div>
+                {descuentoNum > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#ff6b6b', fontWeight: 700, marginBottom: '4px' }}>
+                    <span>— Descuento</span>
+                    <span>-${descuentoNum.toLocaleString('es-AR')}</span>
+                  </div>
+                )}
+                {envioNum > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#40916c', fontWeight: 700, marginBottom: '4px' }}>
+                    <span>+ Envío</span>
+                    <span>${envioNum.toLocaleString('es-AR')}</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', color: '#c5a059', fontWeight: 900, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '8px', marginTop: '8px' }}>
+                  <span>TOTAL</span>
+                  <span>${total.toLocaleString('es-AR')}</span>
+                </div>
+              </div>
 
-
+              <button onClick={aplicarAIncluye}
+                style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'linear-gradient(135deg, #c5a059, #a3844a)', border: 'none', color: '#fff', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer' }}>
+                ✓ Aplicar a "Qué incluye"
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
