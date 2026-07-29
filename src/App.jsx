@@ -1531,6 +1531,10 @@ const [anticipoPropuesta, setAnticipoPropuesta] = useState("");
 const [cuotasPropuesta, setCuotasPropuesta] = useState("");
 
 const [incluyePropuesta, setIncluyePropuesta] = useState("");
+const [productosAlquiler, setProductosAlquiler] = useState([]);
+const [itemsAlquiler, setItemsAlquiler] = useState([]);
+const [descuentoAlquiler, setDescuentoAlquiler] = useState("");
+const [envioAlquiler, setEnvioAlquiler] = useState("");
 
 const [observacionesPropuesta, setObservacionesPropuesta] = useState("");
 
