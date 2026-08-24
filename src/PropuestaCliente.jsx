@@ -2434,8 +2434,8 @@ if (esAlquiler) {
 
             </div>
 
-            {/* Items de alquiler */}
-            {propuesta.itemsAlquiler && propuesta.itemsAlquiler.length > 0 && (
+            {/* Items de alquiler - nuevo o legado */}
+            {(propuesta.itemsAlquiler && propuesta.itemsAlquiler.length > 0) || propuesta.incluye ? (
               <div style={{ gridColumn: "1 / -1", margin: "16px 0 8px" }}>
                 <span style={{ fontSize: "0.65rem", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(197,160,89,0.9)", display: "block", marginBottom: "12px" }}>Detalle del alquiler</span>
                 <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
@@ -2479,7 +2479,27 @@ if (esAlquiler) {
                   </div>
                 )}
               </div>
-            )}
+              {/* Fallback para propuestas sin itemsAlquiler (texto en incluye) */}
+              {(!propuesta.itemsAlquiler || propuesta.itemsAlquiler.length === 0) && propuesta.incluye && (
+                <div style={{ marginTop: "12px" }}>
+                  <span style={{ fontSize: "0.65rem", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(197,160,89,0.9)", display: "block", marginBottom: "12px" }}>Detalle del alquiler</span>
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+                    {propuesta.incluye.split('\n').filter(l => l.trim()).map((linea, i) => {
+                      const esTotal = linea.startsWith('TOTAL:');
+                      const esDesc = linea.includes('Descuento');
+                      const esEnv = linea.startsWith('Env');
+                      const partes = linea.split(' \u2014 ');
+                      return (
+                        <div key={i} style={{ display:"flex", justifyContent:"space-between", padding: esTotal ? "10px 0 4px" : "7px 0", borderBottom: esTotal ? "none" : "1px solid rgba(255,255,255,0.06)", borderTop: esTotal ? "1px solid rgba(197,160,89,0.25)" : "none" }}>
+                          <span style={{ fontSize:"0.85rem", color: esDesc ? "#ff8080" : esEnv ? "#80c97e" : esTotal ? "#fff" : "rgba(255,255,255,0.85)", fontWeight: esTotal ? 800 : 400 }}>{partes[0]}</span>
+                          {partes[1] && <span style={{ fontSize:"0.85rem", color: esTotal ? "#c5a059" : esDesc ? "#ff8080" : esEnv ? "#80c97e" : "rgba(197,160,89,0.9)", fontWeight: esTotal ? 900 : 600, whiteSpace:"nowrap", marginLeft:"12px" }}>{partes[1]}</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
 
 
             <div>
