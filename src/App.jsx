@@ -8608,7 +8608,7 @@ function SelectorProductosAlquiler({ productos, items, setItems, fechaPropuesta,
 
               <button onClick={aplicarAIncluye}
                 style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'linear-gradient(135deg, #c5a059, #a3844a)', border: 'none', color: '#fff', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer' }}>
-                ✓ Aplicar a "Qué incluye"
+                ✓ Confirmar productos
               </button>
             </div>
           )}
