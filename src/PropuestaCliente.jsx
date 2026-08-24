@@ -2508,8 +2508,6 @@ if (esAlquiler) {
                 )}
               </div>
             )}
-              </div>
-            )}
             <div>
               <span>
                 Lugar
