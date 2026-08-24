@@ -2437,6 +2437,25 @@ if (esAlquiler) {
 
             </div>
 
+            {/* Detalle de items de alquiler */}
+            {propuesta.incluye && propuesta.incluye !== "Alquiler de mobiliario" && (
+              <div style={{ gridColumn: "1 / -1", marginTop: "8px", padding: "12px 16px", background: "rgba(255,255,255,0.06)", borderRadius: "12px", border: "1px solid rgba(197,160,89,0.2)" }}>
+                <span style={{ fontSize: "0.65rem", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(197,160,89,0.8)", display: "block", marginBottom: "8px" }}>Detalle del alquiler</span>
+                {propuesta.incluye.split("\n").filter(l => l.trim()).map((linea, i) => {
+                  const esTotal = linea.startsWith("TOTAL:");
+                  const esDescuento = linea.includes("Descuento");
+                  const esEnvio = linea.includes("Envío") || linea.includes("Envio");
+                  const partes = linea.split(" — ");
+                  return (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: esTotal ? "6px 0 0" : "3px 0", borderTop: esTotal ? "1px solid rgba(255,255,255,0.15)" : "none", marginTop: esTotal ? "4px" : "0" }}>
+                      <span style={{ fontSize: "0.78rem", color: esDescuento ? "#ff8080" : esEnvio ? "#80c97e" : esTotal ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.76)", fontWeight: esTotal ? 800 : 400 }}>{partes[0]}</span>
+                      {partes[1] && <span style={{ fontSize: "0.78rem", color: esTotal ? "#c5a059" : esDescuento ? "#ff8080" : esEnvio ? "#80c97e" : "rgba(255,255,255,0.6)", fontWeight: esTotal ? 900 : 600, whiteSpace: "nowrap", marginLeft: "8px" }}>{partes[1]}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             <div>
 
               <span>

@@ -5211,7 +5211,7 @@ Contexto de la foto: ${base}`;
       <div style={{ position:"relative" }}>
       <textarea
         className="input-field"
-        style={{ height:"120px", marginTop:"15px", fontSize:"0.82rem" }}
+        style={{ height:"120px", marginTop:"15px", fontSize:"0.82rem", whiteSpace:"pre-wrap", lineHeight:"1.6" }}
         placeholder="Qué incluye..."
         value={incluyePropuesta}
         onChange={(e) => setIncluyePropuesta(e.target.value)}
