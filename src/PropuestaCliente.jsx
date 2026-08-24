@@ -2506,6 +2506,7 @@ if (esAlquiler) {
                 )}
               </div>
             )}
+            <div>
               <span>
                 Lugar
               </span>
