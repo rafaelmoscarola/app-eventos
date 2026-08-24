@@ -2179,10 +2179,7 @@ if (esAlquiler) {
     template?.galeriaAlquiler || [];
   const bannersAlquiler =
     template?.bannersAlquiler || [];
-  const tipoEventoAlquiler =
-    propuesta.incluye ||
-    propuesta.observaciones ||
-    "Alquiler de mobiliario";
+  const tipoEventoAlquiler = "Alquiler de mobiliario";
   const precioAlquiler =
     propuesta.presupuesto
       ? `${simboloMoneda}${propuesta.presupuesto}`
@@ -3403,16 +3400,81 @@ background:"#111",
         marginBottom:"18px",
         fontWeight:700
       }}>
-        INCLUYE
+        {propuesta.tipo === 'alquiler' ? 'DETALLE DEL ALQUILER' : 'INCLUYE'}
       </div>
 
-      <p style={{
-        lineHeight:1.9,
-        color:"rgba(255,255,255,0.76)",
-        whiteSpace:"pre-line"
-      }}>
-        {propuesta.incluye || "-"}
-      </p>
+      {propuesta.tipo === 'alquiler' ? (
+        <div>
+          {/* Items de alquiler nuevos (con itemsAlquiler) */}
+          {propuesta.itemsAlquiler && propuesta.itemsAlquiler.length > 0 ? (
+            <div>
+              {propuesta.itemsAlquiler.map((item, i) => {
+                const cant = Number(item.cantidad) || 1;
+                const precio = Number(item.precioCustom) || 0;
+                const detalle = [item.material, item.color, item.medidas, item.otro].filter(Boolean).join(' \u00b7 ');
+                return (
+                  <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
+                    <div style={{ flex:1 }}>
+                      <span style={{ fontSize:"0.88rem", color:"rgba(255,255,255,0.88)", fontWeight:500 }}>{cant}x {item.nombre}</span>
+                      {detalle && <span style={{ fontSize:"0.75rem", color:"rgba(255,255,255,0.4)", display:"block", marginTop:"2px" }}>{detalle}</span>}
+                    </div>
+                    <span style={{ fontSize:"0.88rem", color:"rgba(197,160,89,0.95)", fontWeight:600, whiteSpace:"nowrap", marginLeft:"16px" }}>${(precio*cant).toLocaleString('es-AR')}</span>
+                  </div>
+                );
+              })}
+              {Number(propuesta.descuentoAlquiler) > 0 && (
+                <div style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
+                  <span style={{ fontSize:"0.88rem", color:"#ff8080", fontWeight:600 }}>Descuento</span>
+                  <span style={{ fontSize:"0.88rem", color:"#ff8080", fontWeight:700 }}>-${Number(propuesta.descuentoAlquiler).toLocaleString('es-AR')}</span>
+                </div>
+              )}
+              {Number(propuesta.envioAlquiler) > 0 && (
+                <div style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
+                  <span style={{ fontSize:"0.88rem", color:"#80c97e", fontWeight:600 }}>Env\u00edo / Traslado</span>
+                  <span style={{ fontSize:"0.88rem", color:"#80c97e", fontWeight:700 }}>${Number(propuesta.envioAlquiler).toLocaleString('es-AR')}</span>
+                </div>
+              )}
+              <div style={{ display:"flex", justifyContent:"space-between", padding:"12px 0 4px", marginTop:"4px", borderTop:"1px solid rgba(197,160,89,0.3)" }}>
+                <span style={{ fontSize:"1rem", color:"#fff", fontWeight:800, letterSpacing:"1px" }}>TOTAL</span>
+                <span style={{ fontSize:"1rem", color:"#c5a059", fontWeight:900 }}>
+                  {(() => { const sub=(propuesta.itemsAlquiler||[]).reduce((a,i)=>a+(Number(i.precioCustom)||0)*(Number(i.cantidad)||1),0); return '$'+(sub-(Number(propuesta.descuentoAlquiler)||0)+(Number(propuesta.envioAlquiler)||0)).toLocaleString('es-AR'); })()}
+                </span>
+              </div>
+            </div>
+          ) : (
+            /* Propuestas viejas: mostrar incluye como listado formateado */
+            <div>
+              {(propuesta.incluye || '').split('\n').filter(l => l.trim()).map((linea, i) => {
+                const esTotal = linea.startsWith('TOTAL:');
+                const esDescuento = linea.includes('Descuento');
+                const esEnvio = linea.includes('Env') && linea.includes('\u00edo');
+                const partes = linea.split(' \u2014 ');
+                return (
+                  <div key={i} style={{ display:"flex", justifyContent:"space-between", padding: esTotal ? "10px 0 4px" : "6px 0", borderBottom: esTotal ? "none" : "1px solid rgba(255,255,255,0.07)", borderTop: esTotal ? "1px solid rgba(197,160,89,0.3)" : "none", marginTop: esTotal ? "4px" : "0" }}>
+                    <span style={{ fontSize:"0.88rem", color: esTotal ? "#fff" : esDescuento ? "#ff8080" : esEnvio ? "#80c97e" : "rgba(255,255,255,0.85)", fontWeight: esTotal ? 800 : 500 }}>{partes[0]}</span>
+                    {partes[1] && <span style={{ fontSize:"0.88rem", color: esTotal ? "#c5a059" : esDescuento ? "#ff8080" : esEnvio ? "#80c97e" : "rgba(197,160,89,0.9)", fontWeight: esTotal ? 900 : 600, whiteSpace:"nowrap", marginLeft:"16px" }}>{partes[1]}</span>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {/* Observaciones / Comentarios */}
+          {propuesta.observaciones && (
+            <div style={{ marginTop:"20px", padding:"14px 18px", background:"rgba(255,255,255,0.04)", borderRadius:"12px", borderLeft:"3px solid rgba(197,160,89,0.4)" }}>
+              <div style={{ fontSize:"0.65rem", color:"rgba(197,160,89,0.8)", letterSpacing:"3px", textTransform:"uppercase", marginBottom:"8px" }}>Observaciones</div>
+              <p style={{ fontSize:"0.85rem", color:"rgba(255,255,255,0.72)", lineHeight:1.7, margin:0, whiteSpace:"pre-line" }}>{propuesta.observaciones}</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <p style={{
+          lineHeight:1.9,
+          color:"rgba(255,255,255,0.76)",
+          whiteSpace:"pre-line"
+        }}>
+          {propuesta.incluye || "-"}
+        </p>
+      )}
 
     </div>
 
