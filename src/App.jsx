@@ -2333,6 +2333,10 @@ anticipo: anticipoPropuesta,
 
       incluye: incluyePropuesta,
 
+      itemsAlquiler: tipoPropuesta === "alquiler" ? itemsAlquiler : [],
+      descuentoAlquiler: tipoPropuesta === "alquiler" ? descuentoAlquiler : "",
+      envioAlquiler: tipoPropuesta === "alquiler" ? envioAlquiler : "",
+
       observaciones: observacionesPropuesta,
 
       estilo: nuevaPropuesta.estilo,
@@ -5203,7 +5207,7 @@ Contexto de la foto: ${base}`;
           envio={envioAlquiler}
           setEnvio={setEnvioAlquiler}
           onAplicar={(texto, total) => {
-            setIncluyePropuesta(texto);
+            // Los items quedan en itemsAlquiler, solo actualizamos el precio
           }}
         />
       )}
@@ -5212,7 +5216,7 @@ Contexto de la foto: ${base}`;
       <textarea
         className="input-field"
         style={{ height:"120px", marginTop:"15px", fontSize:"0.82rem", whiteSpace:"pre-wrap", lineHeight:"1.6" }}
-        placeholder="Qué incluye..."
+        placeholder={tipoPropuesta === "alquiler" ? "Comentarios o aclaraciones adicionales..." : "Qué incluye..."}
         value={incluyePropuesta}
         onChange={(e) => setIncluyePropuesta(e.target.value)}
       />
@@ -5225,53 +5229,6 @@ Contexto de la foto: ${base}`;
       </button>
     </div>
 
-      {/* Vista previa del listado cuando hay items de alquiler */}
-      {tipoPropuesta === "alquiler" && incluyePropuesta && (
-        <div style={{ marginTop:"12px", border:"1px solid #e8dfc8", borderRadius:"12px", padding:"14px 16px", background:"#fdfaf5" }}>
-          <div style={{ fontSize:"0.72rem", fontWeight:700, color:"#c5a059", letterSpacing:"1.5px", textTransform:"uppercase", marginBottom:"10px" }}>
-            📦 Detalle del alquiler
-          </div>
-          {incluyePropuesta.split("\n").map((linea, i) => {
-            if (!linea.trim()) return null;
-            const esTotal = linea.startsWith("TOTAL:");
-            const esDescuento = linea.includes("Descuento");
-            const esEnvio = linea.includes("Envío") || linea.includes("Envio");
-            const partes = linea.split(" — ");
-            const nombre = partes[0] || linea;
-            const precio = partes[1] || "";
-            return (
-              <div key={i} style={{
-                display:"flex",
-                justifyContent:"space-between",
-                alignItems:"flex-start",
-                padding: esTotal ? "8px 0 0" : "5px 0",
-                borderTop: esTotal ? "1px solid #e0d5c0" : "none",
-                marginTop: esTotal ? "4px" : "0"
-              }}>
-                <div style={{
-                  fontSize: esTotal ? "0.9rem" : "0.82rem",
-                  color: esTotal ? "#1a1a1a" : esDescuento ? "#c1121f" : esEnvio ? "#2d6a4f" : "#333",
-                  fontWeight: esTotal ? 800 : esDescuento || esEnvio ? 700 : 400,
-                  flex:1,
-                  paddingRight:"8px"
-                }}>
-                  {nombre}
-                </div>
-                {precio && (
-                  <div style={{
-                    fontSize: esTotal ? "0.9rem" : "0.82rem",
-                    color: esTotal ? "#c5a059" : esDescuento ? "#c1121f" : esEnvio ? "#2d6a4f" : "#555",
-                    fontWeight: esTotal ? 900 : 600,
-                    whiteSpace:"nowrap"
-                  }}>
-                    {precio}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
 
     <div style={{ position:"relative" }}>
       <textarea

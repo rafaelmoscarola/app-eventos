@@ -2437,24 +2437,53 @@ if (esAlquiler) {
 
             </div>
 
-            {/* Detalle de items de alquiler */}
-            {propuesta.incluye && propuesta.incluye !== "Alquiler de mobiliario" && (
-              <div style={{ gridColumn: "1 / -1", marginTop: "8px", padding: "12px 16px", background: "rgba(255,255,255,0.06)", borderRadius: "12px", border: "1px solid rgba(197,160,89,0.2)" }}>
-                <span style={{ fontSize: "0.65rem", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(197,160,89,0.8)", display: "block", marginBottom: "8px" }}>Detalle del alquiler</span>
-                {propuesta.incluye.split("\n").filter(l => l.trim()).map((linea, i) => {
-                  const esTotal = linea.startsWith("TOTAL:");
-                  const esDescuento = linea.includes("Descuento");
-                  const esEnvio = linea.includes("Envío") || linea.includes("Envio");
-                  const partes = linea.split(" — ");
-                  return (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: esTotal ? "6px 0 0" : "3px 0", borderTop: esTotal ? "1px solid rgba(255,255,255,0.15)" : "none", marginTop: esTotal ? "4px" : "0" }}>
-                      <span style={{ fontSize: "0.78rem", color: esDescuento ? "#ff8080" : esEnvio ? "#80c97e" : esTotal ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.76)", fontWeight: esTotal ? 800 : 400 }}>{partes[0]}</span>
-                      {partes[1] && <span style={{ fontSize: "0.78rem", color: esTotal ? "#c5a059" : esDescuento ? "#ff8080" : esEnvio ? "#80c97e" : "rgba(255,255,255,0.6)", fontWeight: esTotal ? 900 : 600, whiteSpace: "nowrap", marginLeft: "8px" }}>{partes[1]}</span>}
+            {/* Items de alquiler */}
+            {propuesta.itemsAlquiler && propuesta.itemsAlquiler.length > 0 && (
+              <div style={{ gridColumn: "1 / -1", margin: "16px 0 8px" }}>
+                <span style={{ fontSize: "0.65rem", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(197,160,89,0.9)", display: "block", marginBottom: "12px" }}>Detalle del alquiler</span>
+                <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+                  {propuesta.itemsAlquiler.map((item, idx) => {
+                    const cant = Number(item.cantidad) || 1;
+                    const precio = Number(item.precioCustom) || 0;
+                    const detalle = [item.material, item.color, item.medidas, item.otro].filter(Boolean).join(' \u00b7 ');
+                    return (
+                      <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div style={{ flex: 1 }}>
+                          <span style={{ fontSize: "0.82rem", color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>{cant}x {item.nombre}</span>
+                          {detalle && <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.4)", display: "block", marginTop: "2px" }}>{detalle}</span>}
+                        </div>
+                        <span style={{ fontSize: "0.82rem", color: "rgba(197,160,89,0.9)", fontWeight: 600, whiteSpace: "nowrap", marginLeft: "12px" }}>${(precio * cant).toLocaleString('es-AR')}</span>
+                      </div>
+                    );
+                  })}
+                  {Number(propuesta.descuentoAlquiler) > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                      <span style={{ fontSize: "0.82rem", color: "#ff8080", fontWeight: 600 }}>Descuento</span>
+                      <span style={{ fontSize: "0.82rem", color: "#ff8080", fontWeight: 700 }}>-${Number(propuesta.descuentoAlquiler).toLocaleString('es-AR')}</span>
                     </div>
-                  );
-                })}
+                  )}
+                  {Number(propuesta.envioAlquiler) > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                      <span style={{ fontSize: "0.82rem", color: "#80c97e", fontWeight: 600 }}>Env\u00edo</span>
+                      <span style={{ fontSize: "0.82rem", color: "#80c97e", fontWeight: 700 }}>${Number(propuesta.envioAlquiler).toLocaleString('es-AR')}</span>
+                    </div>
+                  )}
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0 4px" }}>
+                    <span style={{ fontSize: "0.9rem", color: "#fff", fontWeight: 800 }}>TOTAL</span>
+                    <span style={{ fontSize: "0.9rem", color: "#c5a059", fontWeight: 900 }}>
+                      {(() => { const sub = (propuesta.itemsAlquiler||[]).reduce((a,i)=>a+(Number(i.precioCustom)||0)*(Number(i.cantidad)||1),0); return '$'+(sub-(Number(propuesta.descuentoAlquiler)||0)+(Number(propuesta.envioAlquiler)||0)).toLocaleString('es-AR'); })()}
+                    </span>
+                  </div>
+                </div>
+                {propuesta.incluye && (
+                  <div style={{ marginTop: "12px", padding: "10px 14px", background: "rgba(255,255,255,0.04)", borderRadius: "10px", borderLeft: "3px solid rgba(197,160,89,0.4)" }}>
+                    <span style={{ fontSize: "0.7rem", color: "rgba(197,160,89,0.7)", letterSpacing: "2px", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>Comentarios</span>
+                    <p style={{ fontSize: "0.82rem", color: "rgba(255,255,255,0.7)", lineHeight: 1.6, margin: 0, whiteSpace: "pre-line" }}>{propuesta.incluye}</p>
+                  </div>
+                )}
               </div>
             )}
+
 
             <div>
 
