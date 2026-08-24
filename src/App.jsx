@@ -5231,8 +5231,7 @@ Contexto de la foto: ${base}`;
           <div style={{ fontSize:"0.72rem", fontWeight:700, color:"#c5a059", letterSpacing:"1.5px", textTransform:"uppercase", marginBottom:"10px" }}>
             📦 Detalle del alquiler
           </div>
-          {incluyePropuesta.split("
-").map((linea, i) => {
+          {incluyePropuesta.split("\n").map((linea, i) => {
             if (!linea.trim()) return null;
             const esTotal = linea.startsWith("TOTAL:");
             const esDescuento = linea.includes("Descuento");
