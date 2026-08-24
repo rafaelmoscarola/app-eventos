@@ -2435,7 +2435,7 @@ if (esAlquiler) {
             </div>
 
             {/* Items de alquiler - nuevo o legado */}
-            {(propuesta.itemsAlquiler && propuesta.itemsAlquiler.length > 0) || propuesta.incluye ? (
+            {((propuesta.itemsAlquiler && propuesta.itemsAlquiler.length > 0) || propuesta.incluye) && (
               <div style={{ gridColumn: "1 / -1", margin: "16px 0 8px" }}>
                 <span style={{ fontSize: "0.65rem", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(197,160,89,0.9)", display: "block", marginBottom: "12px" }}>Detalle del alquiler</span>
                 <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
