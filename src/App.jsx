@@ -885,7 +885,7 @@ ${textoBase}`;
           "Authorization": `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
+          model: "openai/gpt-oss-120b",
           messages: [{ role: "user", content: prompt }],
           max_tokens: 1000
         })
@@ -1115,7 +1115,7 @@ REGLAS:
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
+          model: "openai/gpt-oss-120b",
           messages: [{ role: "system", content: systemPrompt }, ...historial],
           max_tokens: 350
         })
@@ -4988,7 +4988,7 @@ Contexto de la foto: ${base}`;
                             method: "POST",
                             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
                             body: JSON.stringify({
-                              model: "llama-3.3-70b-versatile",
+                              model: "openai/gpt-oss-120b",
                               messages: [{ role: "user", content: prompt }],
                               max_tokens: 120
                             })
