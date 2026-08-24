@@ -991,7 +991,7 @@ const ChatbotWidget = ({ conocimiento, resenas }) => {
   const [leadEnviado, setLeadEnviado] = React.useState(false);
   const [objetoIdx, setObjetoIdx] = React.useState(0);
   const objetos = ["🎂","📸","🎊","💐","🥂","🎈","✨"];
-  const [faseEntrada, setFaseEntrada] = React.useState("grande"); // grande | volando | chico
+  const [faseEntrada, setFaseEntrada] = React.useState("chico"); // grande | volando | chico
   const endRef = React.useRef(null);
 
   // Animación de entrada + sonido R2-D2
@@ -1009,15 +1009,6 @@ const ChatbotWidget = ({ conocimiento, resenas }) => {
     return () => clearInterval(t);
   }, []);
 
-  // Auto-open bubble after 4 seconds
-  React.useEffect(() => {
-    if (mostradoBurbuja) return;
-    const t = setTimeout(() => {
-      setBurbuja(true);
-      setMostradoBurbuja(true);
-    }, 4000);
-    return () => clearTimeout(t);
-  }, [mostradoBurbuja]);
 
   // Scroll to bottom
   React.useEffect(() => {
