@@ -2434,71 +2434,80 @@ if (esAlquiler) {
 
             </div>
 
-            {/* Detalle alquiler - nuevo */}
+            {/* Detalle alquiler */}
             {propuesta.itemsAlquiler && propuesta.itemsAlquiler.length > 0 && (
               <div style={{ gridColumn: "1 / -1", margin: "20px 0 8px" }}>
-                <div style={{ fontSize: "0.65rem", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(197,160,89,0.7)", marginBottom: "14px", fontWeight: 700 }}>Detalle del alquiler</div>
-                {propuesta.itemsAlquiler.map((item, ii) => {
-                  const cant = Number(item.cantidad) || 1;
-                  const precio = Number(item.precioCustom) || 0;
-                  const det = [item.material, item.color, item.medidas, item.otro].filter(Boolean).join(' · ');
-                  return (
-                    <div key={ii} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 0", borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
-                      <div>
-                        <div style={{ fontSize:"0.92rem", color:"rgba(255,255,255,0.9)", fontWeight:500 }}>{cant}x {item.nombre}</div>
-                        {det && <div style={{ fontSize:"0.76rem", color:"rgba(255,255,255,0.38)", marginTop:"3px", letterSpacing:"0.3px" }}>{det}</div>}
-                      </div>
-                      <div style={{ fontSize:"0.92rem", color:"#c5a059", fontWeight:600, marginLeft:"20px", whiteSpace:"nowrap" }}>${(precio*cant).toLocaleString('es-AR')}</div>
-                    </div>
-                  );
-                })}
-                {Number(propuesta.descuentoAlquiler) > 0 && (
-                  <div style={{ display:"flex", justifyContent:"space-between", padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
-                    <span style={{ fontSize:"0.88rem", color:"#ff8080" }}>Descuento</span>
-                    <span style={{ fontSize:"0.88rem", color:"#ff8080", fontWeight:600 }}>-${Number(propuesta.descuentoAlquiler).toLocaleString('es-AR')}</span>
-                  </div>
-                )}
-                {Number(propuesta.envioAlquiler) > 0 && (
-                  <div style={{ display:"flex", justifyContent:"space-between", padding:"10px 0", borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
-                    <span style={{ fontSize:"0.88rem", color:"#80c97e" }}>Envío / Traslado</span>
-                    <span style={{ fontSize:"0.88rem", color:"#80c97e", fontWeight:600 }}>${Number(propuesta.envioAlquiler).toLocaleString('es-AR')}</span>
-                  </div>
-                )}
-                <div style={{ display:"flex", justifyContent:"space-between", padding:"16px 0 4px", marginTop:"2px" }}>
-                  <span style={{ fontSize:"1rem", color:"#fff", fontWeight:800, letterSpacing:"0.5px" }}>TOTAL</span>
-                  <span style={{ fontSize:"1.1rem", color:"#c5a059", fontWeight:900 }}>
-                    {(() => { const s=(propuesta.itemsAlquiler||[]).reduce((a,i)=>a+(Number(i.precioCustom)||0)*(Number(i.cantidad)||1),0); return '$'+(s-(Number(propuesta.descuentoAlquiler)||0)+(Number(propuesta.envioAlquiler)||0)).toLocaleString('es-AR'); })()}
-                  </span>
-                </div>
+                <div style={{ fontSize: "0.65rem", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(197,160,89,0.6)", marginBottom: "12px" }}>Detalle del alquiler</div>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.88rem" }}>
+                  <tbody>
+                    {propuesta.itemsAlquiler.map((item, ii) => {
+                      const cant = Number(item.cantidad) || 1;
+                      const precio = Number(item.precioCustom) || 0;
+                      const det = [item.material, item.color, item.medidas, item.otro].filter(Boolean).join(' · ');
+                      return (
+                        <tr key={ii} style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                          <td style={{ padding: "8px 12px 8px 0", color: "rgba(255,255,255,0.85)", verticalAlign: "top" }}>
+                            {cant}x {item.nombre}{det ? <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.78rem" }}> · {det}</span> : ""}
+                          </td>
+                          <td style={{ padding: "8px 0 8px 12px", color: "#c5a059", fontWeight: 600, whiteSpace: "nowrap", textAlign: "right", verticalAlign: "top" }}>${(precio * cant).toLocaleString('es-AR')}</td>
+                        </tr>
+                      );
+                    })}
+                    {Number(propuesta.descuentoAlquiler) > 0 && (
+                      <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                        <td style={{ padding: "8px 12px 8px 0", color: "#ff8080" }}>Descuento</td>
+                        <td style={{ padding: "8px 0 8px 12px", color: "#ff8080", fontWeight: 600, textAlign: "right" }}>-${Number(propuesta.descuentoAlquiler).toLocaleString('es-AR')}</td>
+                      </tr>
+                    )}
+                    {Number(propuesta.envioAlquiler) > 0 && (
+                      <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                        <td style={{ padding: "8px 12px 8px 0", color: "#80c97e" }}>Envío / Traslado</td>
+                        <td style={{ padding: "8px 0 8px 12px", color: "#80c97e", fontWeight: 600, textAlign: "right" }}>${Number(propuesta.envioAlquiler).toLocaleString('es-AR')}</td>
+                      </tr>
+                    )}
+                    <tr>
+                      <td style={{ padding: "12px 12px 4px 0", color: "#fff", fontWeight: 800, fontSize: "0.95rem" }}>TOTAL</td>
+                      <td style={{ padding: "12px 0 4px 12px", color: "#c5a059", fontWeight: 900, fontSize: "1rem", textAlign: "right" }}>
+                        {(() => { const s=(propuesta.itemsAlquiler||[]).reduce((a,i)=>a+(Number(i.precioCustom)||0)*(Number(i.cantidad)||1),0); return '$'+(s-(Number(propuesta.descuentoAlquiler)||0)+(Number(propuesta.envioAlquiler)||0)).toLocaleString('es-AR'); })()}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
                 {propuesta.incluye && (
-                  <div style={{ marginTop:"20px", paddingTop:"16px", borderTop:"1px solid rgba(255,255,255,0.08)" }}>
-                    <div style={{ fontSize:"0.65rem", letterSpacing:"3px", textTransform:"uppercase", color:"rgba(197,160,89,0.7)", marginBottom:"10px", fontWeight:700 }}>Observaciones</div>
-                    <p style={{ fontSize:"0.88rem", color:"rgba(255,255,255,0.65)", lineHeight:1.8, margin:0, whiteSpace:"pre-line" }}>{propuesta.incluye}</p>
+                  <div style={{ marginTop: "18px", paddingTop: "14px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                    <div style={{ fontSize: "0.65rem", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(197,160,89,0.6)", marginBottom: "8px" }}>Observaciones</div>
+                    <p style={{ fontSize: "0.88rem", color: "rgba(255,255,255,0.65)", lineHeight: 1.8, margin: 0, whiteSpace: "pre-line" }}>{propuesta.incluye}</p>
                   </div>
                 )}
               </div>
             )}
             {(!propuesta.itemsAlquiler || propuesta.itemsAlquiler.length === 0) && propuesta.incluye && (
               <div style={{ gridColumn: "1 / -1", margin: "20px 0 8px" }}>
-                <div style={{ fontSize: "0.65rem", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(197,160,89,0.7)", marginBottom: "14px", fontWeight: 700 }}>Detalle del alquiler</div>
-                {propuesta.incluye.split('\n').filter(l => l.trim()).map((linea, ii) => {
-                  const esTotal = linea.startsWith('TOTAL:');
-                  const esDesc = linea.includes('Descuento');
-                  const esEnv = linea.startsWith('Env');
-                  const partes = linea.split(' — ');
-                  return (
-                    <div key={ii} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding: esTotal ? "14px 0 4px" : "10px 0", borderBottom: esTotal ? "none" : "1px solid rgba(255,255,255,0.07)", borderTop: esTotal ? "1px solid rgba(197,160,89,0.2)" : "none", marginTop: esTotal ? "4px" : "0" }}>
-                      <span style={{ fontSize: esTotal ? "1rem" : "0.9rem", color: esDesc ? "#ff8080" : esEnv ? "#80c97e" : esTotal ? "#fff" : "rgba(255,255,255,0.88)", fontWeight: esTotal ? 800 : 400 }}>{partes[0]}</span>
-                      {partes[1] && <span style={{ fontSize: esTotal ? "1.05rem" : "0.9rem", color: esTotal ? "#c5a059" : esDesc ? "#ff8080" : esEnv ? "#80c97e" : "#c5a059", fontWeight: esTotal ? 900 : 600, marginLeft:"20px", whiteSpace:"nowrap" }}>{partes[1]}</span>}
-                    </div>
-                  );
-                })}
+                <div style={{ fontSize: "0.65rem", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(197,160,89,0.6)", marginBottom: "12px" }}>Detalle del alquiler</div>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.88rem" }}>
+                  <tbody>
+                    {propuesta.incluye.split('\n').filter(l => l.trim()).map((linea, ii) => {
+                      const esTotal = linea.startsWith('TOTAL:');
+                      const esDesc = linea.includes('Descuento');
+                      const esEnv = linea.startsWith('Env');
+                      const partes = linea.split(' — ');
+                      return (
+                        <tr key={ii} style={{ borderBottom: esTotal ? "none" : "1px solid rgba(255,255,255,0.07)", borderTop: esTotal ? "1px solid rgba(197,160,89,0.2)" : "none" }}>
+                          <td style={{ padding: esTotal ? "12px 12px 4px 0" : "8px 12px 8px 0", color: esDesc ? "#ff8080" : esEnv ? "#80c97e" : esTotal ? "#fff" : "rgba(255,255,255,0.85)", fontWeight: esTotal ? 800 : 400, fontSize: esTotal ? "0.95rem" : "0.88rem" }}>{partes[0]}</td>
+                          {partes[1] && <td style={{ padding: esTotal ? "12px 0 4px 12px" : "8px 0 8px 12px", color: esTotal ? "#c5a059" : esDesc ? "#ff8080" : esEnv ? "#80c97e" : "#c5a059", fontWeight: esTotal ? 900 : 600, textAlign: "right", whiteSpace: "nowrap", fontSize: esTotal ? "1rem" : "0.88rem" }}>{partes[1]}</td>}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
                 {propuesta.observaciones && (
-                  <div style={{ marginTop:"20px", paddingTop:"16px", borderTop:"1px solid rgba(255,255,255,0.08)" }}>
-                    <div style={{ fontSize:"0.65rem", letterSpacing:"3px", textTransform:"uppercase", color:"rgba(197,160,89,0.7)", marginBottom:"10px", fontWeight:700 }}>Observaciones</div>
-                    <p style={{ fontSize:"0.88rem", color:"rgba(255,255,255,0.65)", lineHeight:1.8, margin:0, whiteSpace:"pre-line" }}>{propuesta.observaciones}</p>
+                  <div style={{ marginTop: "18px", paddingTop: "14px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                    <div style={{ fontSize: "0.65rem", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(197,160,89,0.6)", marginBottom: "8px" }}>Observaciones</div>
+                    <p style={{ fontSize: "0.88rem", color: "rgba(255,255,255,0.65)", lineHeight: 1.8, margin: 0, whiteSpace: "pre-line" }}>{propuesta.observaciones}</p>
                   </div>
                 )}
+              </div>
+            )}
               </div>
             )}
             <div>
